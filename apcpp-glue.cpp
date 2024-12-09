@@ -1,10 +1,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-
 #include "Archipelago.h"
 #include "apcpp-glue.h"
 
@@ -65,6 +61,17 @@ void _return(recomp_context* ctx, T val) {
     }
 }
 
+void glueGetLine(std::ifstream& in, std::string& outString)
+{
+    char c = in.get();
+    
+    while (c != '\r' && c != '\n' && c != '\0' && c != -1)
+    {
+        outString += c;
+        c = in.get();
+    }
+}
+
 u32 hasItem(u64 itemId)
 {
     u32 count = 0;
@@ -90,7 +97,7 @@ extern "C"
         if (apconnect.good())
         {
             std::string apEnabled;
-            getline(apconnect, apEnabled);
+            glueGetLine(apconnect, apEnabled);
             
             if (apEnabled == "true")
             {
@@ -98,9 +105,9 @@ extern "C"
                 std::string playerName;
                 std::string password;
                 
-                getline(apconnect, address);
-                getline(apconnect, playerName);
-                getline(apconnect, password);
+                glueGetLine(apconnect, address);
+                glueGetLine(apconnect, playerName);
+                glueGetLine(apconnect, password);
                 
                 AP_Init(address.c_str(), "Majora's Mask Recompiled", playerName.c_str(), password.c_str());
                 //AP_Init("apsolostartinventory.json");
