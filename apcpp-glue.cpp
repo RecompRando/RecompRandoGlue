@@ -142,6 +142,11 @@ extern "C"
                 }
                 AP_SendQueuedLocationScouts(0);
             }
+            
+            else
+            {
+                *((u8*) 0x0) = 0x0;  // "false" (or any other string) not supported, crash it
+            }
         }
         
         else
