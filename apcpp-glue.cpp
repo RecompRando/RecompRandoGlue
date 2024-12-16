@@ -180,6 +180,11 @@ extern "C"
         AP_DeathLinkSend();
     }
     
+    DLLEXPORT void rando_get_camc_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("camc") == 1);
+    }
+    
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
