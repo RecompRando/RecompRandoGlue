@@ -128,6 +128,7 @@ extern "C"
                 }
                 
                 AP_QueueLocationScoutsAll();
+                
                 if (AP_GetSlotDataInt("skullsanity") == 2)
                 {
                     for (int i = 0x00; i <= 0x1E; ++i)
@@ -136,10 +137,18 @@ extern "C"
                         {
                             continue;
                         }
-                        uint64_t location_id = 0x3469420062700 | i;
+                        
+                        int64_t location_id = 0x3469420062700 | i;
                         AP_RemoveQueuedLocationScout(location_id);
                     }
                 }
+                
+                for (int64_t i = AP_GetSlotDataInt("starting_heart_locations"); i < 8; ++i)
+                {
+                    int64_t location_id = 0x34694200D0000 | i;
+                    AP_RemoveQueuedLocationScout(location_id);
+                }
+                
                 AP_SendQueuedLocationScouts(0);
             }
             
@@ -203,6 +212,11 @@ extern "C"
     DLLEXPORT void rando_get_receive_filled_wallets_enabled(uint8_t* rdram, recomp_context* ctx)
     {
         _return(ctx, AP_GetSlotDataInt("receive_filled_wallets") == 1);
+    }
+    
+    DLLEXPORT void rando_get_starting_heart_locations(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, (int) AP_GetSlotDataInt("starting_heart_locations"));
     }
     
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
