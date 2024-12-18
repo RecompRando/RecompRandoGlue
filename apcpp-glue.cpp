@@ -352,7 +352,7 @@ extern "C"
     
     DLLEXPORT void rando_say(uint8_t* rdram, recomp_context* ctx)
     {
-        AP_Say(std::string((char*) ctx->r4));
+        AP_Say(std::string((char*) &rdram[ctx->r4]));
     }
     
     DLLEXPORT void rando_get_items_size(uint8_t* rdram, recomp_context* ctx)
