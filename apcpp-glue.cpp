@@ -185,6 +185,26 @@ extern "C"
         _return(ctx, AP_GetSlotDataInt("camc") == 1);
     }
     
+    DLLEXPORT void rando_get_start_with_consumables_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("start_with_consumables") == 1);
+    }
+    
+    DLLEXPORT void rando_get_permanent_chateau_romani_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("permanent_chateau_romani") == 1);
+    }
+    
+    DLLEXPORT void rando_get_reset_with_inverted_time_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("reset_with_inverted_time") == 1);
+    }
+    
+    DLLEXPORT void rando_get_receive_filled_wallets_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("receive_filled_wallets") == 1);
+    }
+    
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
