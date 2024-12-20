@@ -219,6 +219,12 @@ extern "C"
         _return(ctx, (int) AP_GetSlotDataInt("starting_heart_locations"));
     }
     
+    DLLEXPORT void rando_get_tunic_color(uint8_t* rdram, recomp_context* ctx)
+    {
+        fprintf(stderr, "color: 0x%06llX\n", AP_GetSlotDataInt("link_tunic_color"));
+        _return(ctx, (int) AP_GetSlotDataInt("link_tunic_color"));
+    }
+    
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
