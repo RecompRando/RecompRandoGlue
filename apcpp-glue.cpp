@@ -221,7 +221,6 @@ extern "C"
     
     DLLEXPORT void rando_get_tunic_color(uint8_t* rdram, recomp_context* ctx)
     {
-        fprintf(stderr, "color: 0x%06llX\n", AP_GetSlotDataInt("link_tunic_color"));
         _return(ctx, (int) AP_GetSlotDataInt("link_tunic_color"));
     }
     
@@ -252,13 +251,7 @@ extern "C"
             {
                 u8 gi = item & 0xFF;
                 
-                if (gi == GI_SKULL_TOKEN)
-                {
-                    _return(ctx, (u32) GI_TRUE_SKULL_TOKEN);
-                    return;
-                }
-                
-                else if (gi == GI_SWORD_KOKIRI)
+                if (gi == GI_SWORD_KOKIRI)
                 {
                     _return(ctx, (u32) MIN(GI_SWORD_KOKIRI + hasItem(0x3469420000000 | GI_SWORD_KOKIRI), GI_SWORD_GILDED));
                     return;
@@ -372,7 +365,8 @@ extern "C"
     
     DLLEXPORT void rando_say(uint8_t* rdram, recomp_context* ctx)
     {
-        AP_Say(std::string((char*) &rdram[ctx->r4]));
+        // doesn't work
+        AP_Say((char*) TO_PTR(char, ctx->r4));
     }
     
     DLLEXPORT void rando_get_items_size(uint8_t* rdram, recomp_context* ctx)
