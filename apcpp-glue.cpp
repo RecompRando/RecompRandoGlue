@@ -86,6 +86,66 @@ u32 hasItem(u64 itemId)
     return count;
 }
 
+int64_t fixLocation(u32 arg)
+{
+    if ((arg & 0xFF0000) == 0x090000 && AP_GetSlotDataInt("shopsanity") == 1)
+    {
+        u32 shopItem = arg & 0xFFFF;
+        switch (shopItem)
+        {
+            case SI_NUTS_2:
+                shopItem = SI_NUTS_1;
+                break;
+            case SI_STICK_2:
+                shopItem = SI_STICK_1;
+                break;
+            case SI_ARROWS_LARGE_2:
+                shopItem = SI_ARROWS_LARGE_1;
+                break;
+            case SI_ARROWS_MEDIUM_2:
+                shopItem = SI_ARROWS_MEDIUM_1;
+                break;
+            case SI_FAIRY_2:
+                shopItem = SI_FAIRY_1;
+                break;
+            case SI_POTION_GREEN_3:
+                shopItem = SI_POTION_GREEN_2;
+                break;
+            case SI_SHIELD_HERO_2:
+                shopItem = SI_SHIELD_HERO_1;
+                break;
+            case SI_POTION_RED_3:
+                shopItem = SI_POTION_RED_2;
+                break;
+
+            case SI_POTION_RED_6:
+                shopItem = SI_POTION_RED_5;
+                break;
+            case SI_ARROWS_SMALL_3:
+                shopItem = SI_ARROWS_SMALL_2;
+                break;
+            case SI_BOMB_3:
+                shopItem = SI_BOMB_2;
+                break;
+
+            // case SI_BOTTLE:
+            // case SI_SWORD_GREAT_FAIRY:
+            // case SI_SWORD_KOKIRI:
+            // case SI_SWORD_RAZOR:
+            // case SI_SWORD_GILDED:
+            //     shopItem = SI_SWORD_KOKIRI;
+            //     break;
+        }
+        return 0x090000 | shopItem;
+    }
+
+    if (arg == 0x05481E) {
+        return 0x054D1E;
+    }
+    
+    return arg;
+}
+
 extern "C"
 {
     DLLEXPORT u32 recomp_api_version = 1;
@@ -169,6 +229,49 @@ extern "C"
         _return(ctx, AP_GetSlotDataInt("skullsanity") != 2);
     }
     
+    DLLEXPORT void rando_shopsanity_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("shopsanity") != 0);
+    }
+
+    DLLEXPORT void rando_scrubs_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("scrubsanity") == 1);
+    }
+
+    DLLEXPORT void rando_cows_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt("cowsanity") == 1);
+    }
+    
+    DLLEXPORT void rando_damage_multiplier(uint8_t* rdram, recomp_context* ctx)
+    {
+        switch (AP_GetSlotDataInt("damage_multiplier"))
+        {
+            case 0:
+                _return(ctx, (u32) 0);
+                return;
+            case 1:
+                _return(ctx, (u32) 1);
+                return;
+            case 2:
+                _return(ctx, (u32) 2);
+                return;
+            case 3:
+                _return(ctx, (u32) 4);
+                return;
+            case 4:
+                _return(ctx, (u32) 0xF);
+                return;
+        }
+        return;
+    }
+    
+    DLLEXPORT void rando_death_behavior(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, (u32) AP_GetSlotDataInt("death_behavior"));
+    }
+
     DLLEXPORT void rando_get_death_link_pending(uint8_t* rdram, recomp_context* ctx)
     {
         _return(ctx, AP_DeathLinkPending());
@@ -204,9 +307,9 @@ extern "C"
         _return(ctx, AP_GetSlotDataInt("permanent_chateau_romani") == 1);
     }
     
-    DLLEXPORT void rando_get_reset_with_inverted_time_enabled(uint8_t* rdram, recomp_context* ctx)
+    DLLEXPORT void rando_get_start_with_inverted_time_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("reset_with_inverted_time") == 1);
+        _return(ctx, AP_GetSlotDataInt("start_with_inverted_time") == 1);
     }
     
     DLLEXPORT void rando_get_receive_filled_wallets_enabled(uint8_t* rdram, recomp_context* ctx)
@@ -227,7 +330,7 @@ extern "C"
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
-        int64_t location = 0x3469420000000 | arg;
+        int64_t location = 0x3469420000000 | fixLocation(arg);
         _return(ctx, (int) AP_GetLocationItemType(location));
     }
     
@@ -241,7 +344,7 @@ extern "C"
             return;
         }
         
-        int64_t location = 0x3469420000000 | arg;
+        int64_t location = 0x3469420000000 | fixLocation(arg);
         
         if (AP_GetLocationHasLocalItem(location))
         {
@@ -281,7 +384,24 @@ extern "C"
             switch (item & 0xFF0000)
             {
                 case 0x010000:
-                    _return(ctx, (u32) GI_B2);
+                    switch (item & 0xFF)
+                    {
+                        case 0x7F:
+                            _return(ctx, (u32) GI_B2);
+                            return;
+                        case 0x00:
+                            _return(ctx, (u32) GI_46);
+                            return;
+                        case 0x01:
+                            _return(ctx, (u32) GI_47);
+                            return;
+                        case 0x02:
+                            _return(ctx, (u32) GI_48);
+                            return;
+                        case 0x03:
+                            _return(ctx, (u32) GI_49);
+                            return;
+                    }
                     return;
                 case 0x020000:
                     switch (item & 0xFF)
@@ -383,14 +503,14 @@ extern "C"
     DLLEXPORT void rando_has_item(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
-        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) arg)));
+        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
         _return(ctx, hasItem(location_id));
     }
     
     DLLEXPORT void rando_send_location(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
-        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) arg)));
+        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
         if (!AP_GetLocationIsChecked(location_id))
         {
             AP_SendItem(location_id);
@@ -400,7 +520,7 @@ extern "C"
     DLLEXPORT void rando_location_is_checked(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
-        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) arg)));
+        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
         _return(ctx, AP_GetLocationIsChecked(location_id));
     }
     
