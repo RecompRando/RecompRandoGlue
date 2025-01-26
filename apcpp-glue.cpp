@@ -140,7 +140,7 @@ int64_t fixLocation(u32 arg)
     }
 
     if (arg == 0x05481E && AP_GetSlotDataInt("shopsanity") != 2) {
-          return 0x054D1E;
+        return 0x054D1E;
     }
     return arg;
 }
