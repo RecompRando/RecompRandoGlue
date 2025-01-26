@@ -139,10 +139,9 @@ int64_t fixLocation(u32 arg)
         return 0x090000 | shopItem;
     }
 
-    if (arg == 0x05481E) {
-        return 0x054D1E;
+    if (arg == 0x05481E && AP_GetSlotDataInt("shopsanity") != 2) {
+          return 0x054D1E;
     }
-    
     return arg;
 }
 
@@ -201,12 +200,69 @@ extern "C"
                         int64_t location_id = 0x3469420062700 | i;
                         AP_RemoveQueuedLocationScout(location_id);
                     }
+                    for (int i = 0x01; i <= 0x1E; ++i)
+                    {                        
+                        int64_t location_id = 0x3469420062800 | i;
+                        AP_RemoveQueuedLocationScout(location_id);
+                    }
                 }
                 
                 for (int64_t i = AP_GetSlotDataInt("starting_heart_locations"); i < 8; ++i)
                 {
                     int64_t location_id = 0x34694200D0000 | i;
                     AP_RemoveQueuedLocationScout(location_id);
+                }
+
+                if (AP_GetSlotDataInt("cowsanity") == 0)
+                {
+                    for (int i = 0x10; i <= 0x17; ++i)
+                    {                        
+                        int64_t location_id = 0x3469420BEEF00 | i;
+                        AP_RemoveQueuedLocationScout(location_id);
+                    }
+                }
+
+                if (AP_GetSlotDataInt("scrubsanity") == 0)
+                {
+                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_MAGIC_BEANS);
+                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_BOMB_BAG_40);
+                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_POTION_GREEN);
+                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_POTION_BLUE);
+                }
+
+                if (AP_GetSlotDataInt("shopsanity") != 2)
+                {
+                    if (AP_GetSlotDataInt("shopsanity") == 1)
+                    {
+                        for (int i = SI_FAIRY_2; i <= SI_POTION_RED_3; ++i)
+                        {                        
+                            int64_t location_id = 0x3469420090000 | i;
+                            AP_RemoveQueuedLocationScout(location_id);
+                        }
+
+                        AP_RemoveQueuedLocationScout(0x3469420090000 | SI_BOMB_3);
+                        AP_RemoveQueuedLocationScout(0x3469420090000 | SI_ARROWS_SMALL_3);
+                        AP_RemoveQueuedLocationScout(0x3469420090000 | SI_POTION_RED_6);
+                        
+                        AP_RemoveQueuedLocationScout(0x346942005481E);
+                    }
+                    else
+                    {
+                        for (int i = SI_POTION_RED_1; i <= SI_POTION_RED_6; ++i)
+                        {
+                            if (i == SI_BOMB_BAG_20_1 || i == SI_BOMB_BAG_40)
+                            {
+                                continue;
+                            }
+
+                            int64_t location_id = 0x3469420090000 | i;
+                            AP_RemoveQueuedLocationScout(location_id);
+                        }
+
+                        AP_RemoveQueuedLocationScout(0x3469420026392);
+                        AP_RemoveQueuedLocationScout(0x3469420090000 | GI_CHATEAU);
+                        AP_RemoveQueuedLocationScout(0x3469420006792);
+                    }
                 }
                 
                 AP_SendQueuedLocationScouts(0);
