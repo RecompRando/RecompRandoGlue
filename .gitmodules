@@ -1,0 +1,4 @@
+[submodule "lib/APCpp"]
+	path = lib/APCpp
+	url = https://github.com/RecompRando/APCpp.git
+	branch = location-exists
