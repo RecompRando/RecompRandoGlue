@@ -570,6 +570,7 @@ extern "C"
         if (!AP_GetLocationIsChecked(location_id))
         {
             AP_SendItem(location_id);
+            while (!AP_GetLocationIsChecked(location_id));
         }
     }
     
