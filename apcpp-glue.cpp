@@ -466,7 +466,7 @@ extern "C"
                             _return(ctx, (u32) GI_MAGIC_JAR_SMALL);
                             return;
                         case 0x01:
-                            _return(ctx, (u32) GI_SWORD_KOKIRI);
+                            _return(ctx, (u32) GI_71);
                             return;
                     }
                     return;
@@ -508,17 +508,17 @@ extern "C"
                 case 0x090000:
                     switch (item & 0xFF)
                     {
-                        case ITEM_DUNGEON_MAP:
-                            _return(ctx, (u32) GI_MAP);
-                            return;
-                        case ITEM_COMPASS:
-                            _return(ctx, (u32) GI_COMPASS);
-                            return;
                         case ITEM_KEY_BOSS:
-                            _return(ctx, (u32) GI_KEY_BOSS);
+                            _return(ctx, (u32) (GI_MAX + (((item >> 8) & 0xF) * 4) + 1));
                             return;
                         case ITEM_KEY_SMALL:
-                            _return(ctx, (u32) GI_KEY_SMALL);
+                            _return(ctx, (u32) (GI_MAX + (((item >> 8) & 0xF) * 4) + 2));
+                            return;
+                        case ITEM_DUNGEON_MAP:
+                            _return(ctx, (u32) (GI_MAX + (((item >> 8) & 0xF) * 4) + 3));
+                            return;
+                        case ITEM_COMPASS:
+                            _return(ctx, (u32) (GI_MAX + (((item >> 8) & 0xF) * 4) + 4));
                             return;
                     }
                     return;
