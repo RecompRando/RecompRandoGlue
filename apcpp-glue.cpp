@@ -80,13 +80,15 @@ void glueGetLine(std::ifstream& in, std::string& outString)
     }
 }
 
+AP_State* state;
+
 u32 hasItem(u64 itemId)
 {
     u32 count = 0;
-    u32 items_size = (u32) AP_GetReceivedItemsSize();
+    u32 items_size = (u32) AP_GetReceivedItemsSize(state);
     for (u32 i = 0; i < items_size; ++i)
     {
-        if (AP_GetReceivedItem(i) == itemId)
+        if (AP_GetReceivedItem(state, i) == itemId)
         {
             count += 1;
         }
@@ -96,7 +98,7 @@ u32 hasItem(u64 itemId)
 
 int64_t fixLocation(u32 arg)
 {
-    if ((arg & 0xFF0000) == 0x090000 && AP_GetSlotDataInt("shopsanity") == 1)
+    if ((arg & 0xFF0000) == 0x090000 && AP_GetSlotDataInt(state, "shopsanity") == 1)
     {
         u32 shopItem = arg & 0xFFFF;
         switch (shopItem)
@@ -147,7 +149,7 @@ int64_t fixLocation(u32 arg)
         return 0x090000 | shopItem;
     }
 
-    if (arg == 0x05481E && AP_GetSlotDataInt("shopsanity") != 2) {
+    if (arg == 0x05481E && AP_GetSlotDataInt(state, "shopsanity") != 2) {
         return 0x054D1E;
     }
     return arg;
@@ -159,7 +161,7 @@ void syncLocation(int64_t location_id)
 {
     if (location_id == last_location_sent)
     {
-        while (!AP_GetLocationIsChecked(location_id));
+        while (!AP_GetLocationIsChecked(state, location_id));
     }
 }
 
@@ -186,27 +188,28 @@ extern "C"
                 glueGetLine(apconnect, playerName);
                 glueGetLine(apconnect, password);
                 
-                AP_Init(address.c_str(), "Majora's Mask Recompiled", playerName.c_str(), password.c_str());
+                state = AP_New();
+                AP_Init(state, address.c_str(), "Majora's Mask Recompiled", playerName.c_str(), password.c_str());
                 //AP_Init("apsolostartinventory.json");
                 
-                AP_SetDeathLinkSupported(true);
+                AP_SetDeathLinkSupported(state, true);
                 
-                AP_Start();
+                AP_Start(state);
                 
-                while (!AP_IsConnected())
+                while (!AP_IsConnected(state))
                 {
-                    if (AP_GetConnectionStatus() == AP_ConnectionStatus::ConnectionRefused || AP_GetConnectionStatus() == AP_ConnectionStatus::NotFound)
+                    if (AP_GetConnectionStatus(state) == AP_ConnectionStatus::ConnectionRefused || AP_GetConnectionStatus(state) == AP_ConnectionStatus::NotFound)
                     {
-                        AP_Stop();
+                        AP_Stop(state);
                         apconnect.close();
                         *((u8*) 0x0) = 0x0;  // screw no ui just crash everything
                         return;
                     }
                 }
                 
-                AP_QueueLocationScoutsAll();
+                AP_QueueLocationScoutsAll(state);
                 
-                if (AP_GetSlotDataInt("skullsanity") == 2)
+                if (AP_GetSlotDataInt(state, "skullsanity") == 2)
                 {
                     for (int i = 0x00; i <= 0x1E; ++i)
                     {
@@ -216,53 +219,53 @@ extern "C"
                         }
                         
                         int64_t location_id = 0x3469420062700 | i;
-                        AP_RemoveQueuedLocationScout(location_id);
+                        AP_RemoveQueuedLocationScout(state, location_id);
                     }
                     for (int i = 0x01; i <= 0x1E; ++i)
                     {                        
                         int64_t location_id = 0x3469420062800 | i;
-                        AP_RemoveQueuedLocationScout(location_id);
+                        AP_RemoveQueuedLocationScout(state, location_id);
                     }
                 }
                 
-                for (int64_t i = AP_GetSlotDataInt("starting_heart_locations"); i < 8; ++i)
+                for (int64_t i = AP_GetSlotDataInt(state, "starting_heart_locations"); i < 8; ++i)
                 {
                     int64_t location_id = 0x34694200D0000 | i;
-                    AP_RemoveQueuedLocationScout(location_id);
+                    AP_RemoveQueuedLocationScout(state, location_id);
                 }
 
-                if (AP_GetSlotDataInt("cowsanity") == 0)
+                if (AP_GetSlotDataInt(state, "cowsanity") == 0)
                 {
                     for (int i = 0x10; i <= 0x17; ++i)
                     {                        
                         int64_t location_id = 0x3469420BEEF00 | i;
-                        AP_RemoveQueuedLocationScout(location_id);
+                        AP_RemoveQueuedLocationScout(state, location_id);
                     }
                 }
 
-                if (AP_GetSlotDataInt("scrubsanity") == 0)
+                if (AP_GetSlotDataInt(state, "scrubsanity") == 0)
                 {
-                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_MAGIC_BEANS);
-                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_BOMB_BAG_40);
-                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_POTION_GREEN);
-                    AP_RemoveQueuedLocationScout(0x3469420090100 | GI_POTION_BLUE);
+                    AP_RemoveQueuedLocationScout(state, 0x3469420090100 | GI_MAGIC_BEANS);
+                    AP_RemoveQueuedLocationScout(state, 0x3469420090100 | GI_BOMB_BAG_40);
+                    AP_RemoveQueuedLocationScout(state, 0x3469420090100 | GI_POTION_GREEN);
+                    AP_RemoveQueuedLocationScout(state, 0x3469420090100 | GI_POTION_BLUE);
                 }
 
-                if (AP_GetSlotDataInt("shopsanity") != 2)
+                if (AP_GetSlotDataInt(state, "shopsanity") != 2)
                 {
-                    if (AP_GetSlotDataInt("shopsanity") == 1)
+                    if (AP_GetSlotDataInt(state, "shopsanity") == 1)
                     {
                         for (int i = SI_FAIRY_2; i <= SI_POTION_RED_3; ++i)
                         {                        
                             int64_t location_id = 0x3469420090000 | i;
-                            AP_RemoveQueuedLocationScout(location_id);
+                            AP_RemoveQueuedLocationScout(state, location_id);
                         }
 
-                        AP_RemoveQueuedLocationScout(0x3469420090000 | SI_BOMB_3);
-                        AP_RemoveQueuedLocationScout(0x3469420090000 | SI_ARROWS_SMALL_3);
-                        AP_RemoveQueuedLocationScout(0x3469420090000 | SI_POTION_RED_6);
+                        AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_BOMB_3);
+                        AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_ARROWS_SMALL_3);
+                        AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_POTION_RED_6);
                         
-                        AP_RemoveQueuedLocationScout(0x346942005481E);
+                        AP_RemoveQueuedLocationScout(state, 0x346942005481E);
                     }
                     else
                     {
@@ -274,16 +277,16 @@ extern "C"
                             }
 
                             int64_t location_id = 0x3469420090000 | i;
-                            AP_RemoveQueuedLocationScout(location_id);
+                            AP_RemoveQueuedLocationScout(state, location_id);
                         }
 
-                        AP_RemoveQueuedLocationScout(0x3469420026392);
-                        AP_RemoveQueuedLocationScout(0x3469420090000 | GI_CHATEAU);
-                        AP_RemoveQueuedLocationScout(0x3469420006792);
+                        AP_RemoveQueuedLocationScout(state, 0x3469420026392);
+                        AP_RemoveQueuedLocationScout(state, 0x3469420090000 | GI_CHATEAU);
+                        AP_RemoveQueuedLocationScout(state, 0x3469420006792);
                     }
                 }
                 
-                AP_SendQueuedLocationScouts(0);
+                AP_SendQueuedLocationScouts(state, 0);
             }
             
             else
@@ -300,27 +303,27 @@ extern "C"
     
     DLLEXPORT void rando_skulltulas_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("skullsanity") != 2);
+        _return(ctx, AP_GetSlotDataInt(state, "skullsanity") != 2);
     }
     
     DLLEXPORT void rando_shopsanity_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("shopsanity") != 0);
+        _return(ctx, AP_GetSlotDataInt(state, "shopsanity") != 0);
     }
 
     DLLEXPORT void rando_scrubs_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("scrubsanity") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "scrubsanity") == 1);
     }
 
     DLLEXPORT void rando_cows_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("cowsanity") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "cowsanity") == 1);
     }
     
     DLLEXPORT void rando_damage_multiplier(uint8_t* rdram, recomp_context* ctx)
     {
-        switch (AP_GetSlotDataInt("damage_multiplier"))
+        switch (AP_GetSlotDataInt(state, "damage_multiplier"))
         {
             case 0:
                 _return(ctx, (u32) 0);
@@ -343,69 +346,69 @@ extern "C"
     
     DLLEXPORT void rando_death_behavior(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, (u32) AP_GetSlotDataInt("death_behavior"));
+        _return(ctx, (u32) AP_GetSlotDataInt(state, "death_behavior"));
     }
 
     DLLEXPORT void rando_get_death_link_pending(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_DeathLinkPending());
+        _return(ctx, AP_DeathLinkPending(state));
     }
     
     DLLEXPORT void rando_reset_death_link_pending(uint8_t* rdram, recomp_context* ctx)
     {
-        AP_DeathLinkClear();
+        AP_DeathLinkClear(state);
     }
     
     DLLEXPORT void rando_get_death_link_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("death_link") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "death_link") == 1);
     }
     
     DLLEXPORT void rando_send_death_link(uint8_t* rdram, recomp_context* ctx)
     {
-        AP_DeathLinkSend();
+        AP_DeathLinkSend(state);
     }
     
     DLLEXPORT void rando_get_camc_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("camc") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "camc") == 1);
     }
     
     DLLEXPORT void rando_get_start_with_consumables_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("start_with_consumables") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "start_with_consumables") == 1);
     }
     
     DLLEXPORT void rando_get_permanent_chateau_romani_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("permanent_chateau_romani") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "permanent_chateau_romani") == 1);
     }
     
     DLLEXPORT void rando_get_start_with_inverted_time_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("start_with_inverted_time") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "start_with_inverted_time") == 1);
     }
     
     DLLEXPORT void rando_get_receive_filled_wallets_enabled(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, AP_GetSlotDataInt("receive_filled_wallets") == 1);
+        _return(ctx, AP_GetSlotDataInt(state, "receive_filled_wallets") == 1);
     }
     
     DLLEXPORT void rando_get_starting_heart_locations(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, (int) AP_GetSlotDataInt("starting_heart_locations"));
+        _return(ctx, (int) AP_GetSlotDataInt(state, "starting_heart_locations"));
     }
     
     DLLEXPORT void rando_get_tunic_color(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, (int) AP_GetSlotDataInt("link_tunic_color"));
+        _return(ctx, (int) AP_GetSlotDataInt(state, "link_tunic_color"));
     }
     
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location = 0x3469420000000 | fixLocation(arg);
-        _return(ctx, (int) AP_GetLocationItemType(location));
+        _return(ctx, (int) AP_GetLocationItemType(state, location));
     }
     
     DLLEXPORT void rando_get_item_id(uint8_t* rdram, recomp_context* ctx)
@@ -420,9 +423,9 @@ extern "C"
         
         int64_t location = 0x3469420000000 | fixLocation(arg);
         
-        if (AP_GetLocationHasLocalItem(location))
+        if (AP_GetLocationHasLocalItem(state, location))
         {
-            int64_t item = AP_GetItemAtLocation(location) & 0xFFFFFF;
+            int64_t item = AP_GetItemAtLocation(state, location) & 0xFFFFFF;
             
             if ((item & 0xFF0000) == 0x000000)
             {
@@ -543,7 +546,7 @@ extern "C"
             }
         }
         
-        switch (AP_GetLocationItemType(location))
+        switch (AP_GetLocationItemType(state, location))
         {
             case ITEM_TYPE_FILLER:
                 _return(ctx, (u32) GI_AP_FILLER);
@@ -557,38 +560,32 @@ extern "C"
         }
     }
     
-    DLLEXPORT void rando_say(uint8_t* rdram, recomp_context* ctx)
-    {
-        // doesn't work
-        AP_Say((char*) TO_PTR(char, ctx->r4));
-    }
-    
     DLLEXPORT void rando_get_items_size(uint8_t* rdram, recomp_context* ctx)
     {
-        _return(ctx, ((u32) AP_GetReceivedItemsSize()));
+        _return(ctx, ((u32) AP_GetReceivedItemsSize(state)));
     }
     
     DLLEXPORT void rando_get_item(uint8_t* rdram, recomp_context* ctx)
     {
         u32 items_i = _arg<0, u32>(rdram, ctx);
-        _return(ctx, ((u32) AP_GetReceivedItem(items_i)));
+        _return(ctx, ((u32) AP_GetReceivedItem(state, items_i)));
     }
     
     DLLEXPORT void rando_has_item(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
-        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
-        syncLocation(location_id);
-        _return(ctx, hasItem(location_id));
+        int64_t item_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) arg)));
+        syncLocation(last_location_sent);
+        _return(ctx, hasItem(item_id));
     }
     
     DLLEXPORT void rando_send_location(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
-        if (AP_LocationExists(location_id) && !AP_GetLocationIsChecked(location_id))
+        if (AP_LocationExists(state, location_id) && !AP_GetLocationIsChecked(state, location_id))
         {
-            AP_SendItem(location_id);
+            AP_SendItem(state, location_id);
             last_location_sent = location_id;
         }
     }
@@ -598,11 +595,11 @@ extern "C"
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
         syncLocation(location_id);
-        _return(ctx, AP_GetLocationIsChecked(location_id));
+        _return(ctx, AP_GetLocationIsChecked(state, location_id));
     }
     
     DLLEXPORT void rando_complete_goal(uint8_t* rdram, recomp_context* ctx)
     {
-        AP_StoryComplete();
+        AP_StoryComplete(state);
     }
 }
