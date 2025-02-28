@@ -124,7 +124,7 @@ extern "C"
                 glueGetLine(apconnect, password);
                 
                 state = AP_New();
-                AP_Init(state, address.c_str(), "Banjo-Kazooie Recompiled", playerName.c_str(), password.c_str());
+                AP_Init(state, address.c_str(), "Banjo-Kazooie", playerName.c_str(), password.c_str());
                 //AP_Init("apsolostartinventory.json");
                 
                 AP_SetDeathLinkSupported(state, true);
