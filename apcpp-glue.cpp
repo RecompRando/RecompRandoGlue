@@ -94,6 +94,11 @@ int64_t last_location_sent;
 
 void syncLocation(int64_t location_id)
 {
+    if (location_id == 0)
+    {
+        return;
+    }
+
     if (location_id == last_location_sent)
     {
         while (!AP_GetLocationIsChecked(state, location_id));
@@ -127,7 +132,7 @@ extern "C"
                 AP_Init(state, address.c_str(), "Banjo-Kazooie", playerName.c_str(), password.c_str());
                 //AP_Init("apsolostartinventory.json");
                 
-                AP_SetDeathLinkSupported(state, true);
+                //~ AP_SetDeathLinkSupported(state, true);
                 
                 AP_Start(state);
                 
