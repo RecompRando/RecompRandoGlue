@@ -4,6 +4,61 @@
 #include "Archipelago.h"
 #include "apcpp-glue.h"
 
+#if 0 // For native compilation
+#  define PTR(x) x*
+#  define RDRAM_ARG
+#  define RDRAM_ARG1
+#  define PASS_RDRAM
+#  define PASS_RDRAM1
+#  define TO_PTR(type, var) var
+#  define GET_MEMBER(type, addr, member) (&addr->member)
+#  ifdef __cplusplus
+#    define NULLPTR nullptr
+#  endif
+#else
+#  define PTR(x) int32_t
+#  define RDRAM_ARG uint8_t *rdram,
+#  define RDRAM_ARG1 uint8_t *rdram
+#  define PASS_RDRAM rdram,
+#  define PASS_RDRAM1 rdram
+#  define TO_PTR(type, var) ((type*)(&rdram[(uint64_t)var - 0xFFFFFFFF80000000]))
+#  define GET_MEMBER(type, addr, member) (addr + (intptr_t)&(((type*)nullptr)->member))
+#  ifdef __cplusplus
+#    define NULLPTR (PTR(void))0
+#  endif
+#endif
+
+typedef uint64_t gpr;
+
+#define SIGNED(val) \
+    ((int64_t)(val))
+
+#define ADD32(a, b) \
+    ((gpr)(int32_t)((a) + (b)))
+
+#define SUB32(a, b) \
+    ((gpr)(int32_t)((a) - (b)))
+
+#define MEM_W(offset, reg) \
+    (*(int32_t*)(rdram + ((((reg) + (offset))) - 0xFFFFFFFF80000000)))
+
+#define MEM_H(offset, reg) \
+    (*(int16_t*)(rdram + ((((reg) + (offset)) ^ 2) - 0xFFFFFFFF80000000)))
+
+#define MEM_B(offset, reg) \
+    (*(int8_t*)(rdram + ((((reg) + (offset)) ^ 3) - 0xFFFFFFFF80000000)))
+
+#define MEM_HU(offset, reg) \
+    (*(uint16_t*)(rdram + ((((reg) + (offset)) ^ 2) - 0xFFFFFFFF80000000)))
+
+#define MEM_BU(offset, reg) \
+    (*(uint8_t*)(rdram + ((((reg) + (offset)) ^ 3) - 0xFFFFFFFF80000000)))
+
+#define SD(val, offset, reg) { \
+    *(uint32_t*)(rdram + ((((reg) + (offset) + 4)) - 0xFFFFFFFF80000000)) = (uint32_t)((gpr)(val) >> 0); \
+    *(uint32_t*)(rdram + ((((reg) + (offset) + 0)) - 0xFFFFFFFF80000000)) = (uint32_t)((gpr)(val) >> 32); \
+}
+
 #define TO_PTR(type, var) ((type*)(&rdram[(uint64_t)var - 0xFFFFFFFF80000000]))
 
 template<int index, typename T>
@@ -102,6 +157,16 @@ void syncLocation(int64_t location_id)
     if (location_id == last_location_sent)
     {
         while (!AP_GetLocationIsChecked(state, location_id));
+    }
+}
+
+void getStr(uint8_t* rdram, PTR(char) ptr, std::string& outString) {
+    char c = MEM_B(0, (gpr) ptr);
+    u32 i = 0;
+    while (c != 0) {
+        outString += c;
+        i += 1;
+        c = MEM_B(i, (gpr) ptr);
     }
 }
 
@@ -222,6 +287,62 @@ extern "C"
         int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
         syncLocation(location_id);
         _return(ctx, AP_GetLocationIsChecked(state, location_id));
+    }
+    
+    DLLEXPORT void rando_get_datastorage_u32_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        char* value_char_ptr = AP_GetDataStorageSync(state, key.c_str());
+
+        u32 value = 0;
+
+        if (strncmp(value_char_ptr, "null", 4) != 0)
+        {
+            value = std::stoi(value_char_ptr);
+        }
+
+        _return(ctx, value);
+    }
+    
+    DLLEXPORT void rando_set_datastorage_u32_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        u32 value = _arg<1, u32>(rdram, ctx);
+        std::string key = "";
+        getStr(rdram, ptr, key);
+
+        try
+        {
+            AP_SetDataStorageSync(state, key.c_str(), (char*) std::to_string(value).c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
+    }
+    
+    DLLEXPORT void rando_set_datastorage_u32_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        u32 value = _arg<1, u32>(rdram, ctx);
+        std::string key = "";
+        getStr(rdram, ptr, key);
+
+        try
+        {
+            AP_SetDataStorageAsync(state, key.c_str(), (char*) std::to_string(value).c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
     }
     
     DLLEXPORT void rando_complete_goal(uint8_t* rdram, recomp_context* ctx)
