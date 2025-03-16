@@ -306,7 +306,7 @@ extern "C"
                 AP_RemoveQueuedLocationScout(state, location_id);
             }
         }
-
+        
         if (AP_GetSlotDataInt(state, "scrubsanity") == 0)
         {
             AP_RemoveQueuedLocationScout(state, 0x3469420090100 | GI_MAGIC_BEANS);
@@ -314,9 +314,11 @@ extern "C"
             AP_RemoveQueuedLocationScout(state, 0x3469420090100 | GI_POTION_GREEN);
             AP_RemoveQueuedLocationScout(state, 0x3469420090100 | GI_POTION_BLUE);
         }
-
+        
         if (AP_GetSlotDataInt(state, "shopsanity") != 2)
         {
+            AP_RemoveQueuedLocationScout(state, 0x346942005481E);
+            
             if (AP_GetSlotDataInt(state, "shopsanity") == 1)
             {
                 for (int i = SI_FAIRY_2; i <= SI_POTION_RED_3; ++i)
@@ -328,8 +330,6 @@ extern "C"
                 AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_BOMB_3);
                 AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_ARROWS_SMALL_3);
                 AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_POTION_RED_6);
-                
-                AP_RemoveQueuedLocationScout(state, 0x346942005481E);
             }
             else
             {
@@ -352,7 +352,7 @@ extern "C"
         }
         
         AP_SendQueuedLocationScouts(state, 0);
-
+        
         _return(ctx, true);
     }
     
@@ -634,6 +634,13 @@ extern "C"
         _return(ctx, hasItem(item_id));
     }
     
+    DLLEXPORT void rando_has_item_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        int64_t item_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) arg)));
+        _return(ctx, hasItem(item_id));
+    }
+    
     DLLEXPORT void rando_send_location(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
@@ -650,6 +657,13 @@ extern "C"
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
         syncLocation(location_id);
+        _return(ctx, AP_GetLocationIsChecked(state, location_id));
+    }
+    
+    DLLEXPORT void rando_location_is_checked_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
         _return(ctx, AP_GetLocationIsChecked(state, location_id));
     }
     
