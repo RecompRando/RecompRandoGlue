@@ -8,7 +8,9 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
-add_library(APCpp-Glue SHARED apcpp-glue.cpp apcpp-glue.h Archipelago.h)
+add_library(APCpp-Glue SHARED apcpp-glue.cpp apcpp-glue.h)
+
+target_include_directories(${PROJECT_NAME} PRIVATE lib/APCpp)
 
 if (WIN32)
     target_link_libraries(${PROJECT_NAME} ws2_32)
