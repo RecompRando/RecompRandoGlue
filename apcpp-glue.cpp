@@ -367,11 +367,6 @@ extern "C"
         _return(ctx, AP_GetSlotDataInt(state, "cowsanity") == 1);
     }
     
-    DLLEXPORT void rando_is_magic_trap(uint8_t* rdram, recomp_context* ctx)
-    {
-        _return(ctx, AP_GetSlotDataInt(state, "magic_is_a_trap") == 1);
-    }
-    
     DLLEXPORT void rando_damage_multiplier(uint8_t* rdram, recomp_context* ctx)
     {
         switch (AP_GetSlotDataInt(state, "damage_multiplier"))
@@ -424,7 +419,12 @@ extern "C"
     {
         _return(ctx, AP_GetSlotDataInt(state, "camc") == 1);
     }
-    
+       
+    DLLEXPORT void rando_is_magic_trap(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt(state, "magic_is_a_trap") == 1);
+    }
+
     DLLEXPORT void rando_get_start_with_consumables_enabled(uint8_t* rdram, recomp_context* ctx)
     {
         _return(ctx, AP_GetSlotDataInt(state, "start_with_consumables") == 1);
@@ -448,6 +448,16 @@ extern "C"
     DLLEXPORT void rando_get_starting_heart_locations(uint8_t* rdram, recomp_context* ctx)
     {
         _return(ctx, (int) AP_GetSlotDataInt(state, "starting_heart_locations"));
+    }
+    
+    DLLEXPORT void rando_get_moon_remains_required(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, (int) AP_GetSlotDataInt(state, "moon_remains_required"));
+    }
+    
+    DLLEXPORT void rando_get_majora_remains_required(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, (int) AP_GetSlotDataInt(state, "majora_remains_required"));
     }
     
     DLLEXPORT void rando_get_tunic_color(uint8_t* rdram, recomp_context* ctx)
