@@ -678,6 +678,11 @@ extern "C"
         _return(ctx, AP_GetLocationIsChecked(state, location_id));
     }
     
+    DLLEXPORT void rando_get_last_location_sent(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, (u32) (last_location_sent & 0xFFFFFF));
+    }
+    
     DLLEXPORT void rando_complete_goal(uint8_t* rdram, recomp_context* ctx)
     {
         AP_StoryComplete(state);
