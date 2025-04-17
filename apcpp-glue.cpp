@@ -367,6 +367,11 @@ extern "C"
         _return(ctx, AP_GetSlotDataInt(state, "cowsanity") == 1);
     }
     
+    DLLEXPORT void rando_is_magic_trap(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, AP_GetSlotDataInt(state, "magic_is_a_trap") == 1);
+    }
+    
     DLLEXPORT void rando_damage_multiplier(uint8_t* rdram, recomp_context* ctx)
     {
         switch (AP_GetSlotDataInt(state, "damage_multiplier"))
