@@ -445,6 +445,11 @@ extern "C"
         _return(ctx, AP_GetSlotDataInt(state, "receive_filled_wallets") == 1);
     }
     
+    DLLEXPORT void rando_get_remains_allow_boss_warps_enabled(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, (int) AP_GetSlotDataInt(state, "remains_allow_boss_warps"));
+    }
+    
     DLLEXPORT void rando_get_starting_heart_locations(uint8_t* rdram, recomp_context* ctx)
     {
         _return(ctx, (int) AP_GetSlotDataInt(state, "starting_heart_locations"));
