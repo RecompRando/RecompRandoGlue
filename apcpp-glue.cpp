@@ -555,6 +555,9 @@ extern "C"
                         case 0x01:
                             _return(ctx, (u32) GI_71);
                             return;
+                        case 0x03:
+                            _return(ctx, (u32) GI_73);
+                            return;
                     }
                     return;
                 case 0x040000:
