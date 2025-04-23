@@ -586,10 +586,13 @@ extern "C"
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
-        if (AP_LocationExists(state, location_id) && !AP_GetLocationIsChecked(state, location_id))
+        if (AP_LocationExists(state, location_id))
         {
-            AP_SendItem(state, location_id);
             last_location_sent = location_id;
+            if (!AP_GetLocationIsChecked(state, location_id))
+            {
+                AP_SendItem(state, location_id);
+            }
         }
     }
     
