@@ -536,6 +536,11 @@ extern "C"
         }
     }
     
+    DLLEXPORT void rando_get_own_slot_id(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, ((u32) AP_GetPlayerID(state)));
+    }
+    
     DLLEXPORT void rando_get_location_item_player(uint8_t* rdram, recomp_context* ctx)
     {
         u32 location_id_arg = _arg<0, u32>(rdram, ctx);
@@ -565,6 +570,32 @@ extern "C"
     {
         u32 items_i = _arg<0, u32>(rdram, ctx);
         _return(ctx, ((u32) AP_GetReceivedItem(state, items_i)));
+    }
+    
+    DLLEXPORT void rando_get_sending_player(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 items_i = _arg<0, u32>(rdram, ctx);
+        _return(ctx, ((u32) AP_GetSendingPlayer(state, items_i) & 0xFFFFFFFF));
+    }
+    
+    DLLEXPORT void rando_get_item_name_from_id(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        PTR(char) str_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        
+        int64_t item_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) arg)));
+        
+        setStr(rdram, str_ptr, AP_GetItemNameFromID(state, item_id));
+    }
+    
+    DLLEXPORT void rando_get_sending_player_name(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 items_i = _arg<0, u32>(rdram, ctx);
+        PTR(char) str_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        
+        int64_t sending_player = AP_GetSendingPlayer(state, items_i);
+        
+        setStr(rdram, str_ptr, AP_GetPlayerFromSlot(state, sending_player));
     }
     
     DLLEXPORT void rando_has_item(uint8_t* rdram, recomp_context* ctx)
