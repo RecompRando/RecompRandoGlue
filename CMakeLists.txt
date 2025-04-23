@@ -1,14 +1,18 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(APCpp-Glue)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 set(CMAKE_INSTALL_RPATH "$\{ORIGIN\}")
 
-add_library(APCpp-Glue SHARED apcpp-glue.cpp apcpp-glue.h)
+add_library(APCpp-Glue SHARED 
+    apcpp-yaml-config-exports.cpp
+    apcpp-glue.cpp
+    apcpp-glue.h
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE lib/APCpp)
 

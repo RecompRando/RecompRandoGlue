@@ -4,115 +4,22 @@
 #include "Archipelago.h"
 #include "apcpp-glue.h"
 
-#if 0 // For native compilation
-#  define PTR(x) x*
-#  define RDRAM_ARG
-#  define RDRAM_ARG1
-#  define PASS_RDRAM
-#  define PASS_RDRAM1
-#  define TO_PTR(type, var) var
-#  define GET_MEMBER(type, addr, member) (&addr->member)
-#  ifdef __cplusplus
-#    define NULLPTR nullptr
-#  endif
-#else
-#  define PTR(x) int32_t
-#  define RDRAM_ARG uint8_t *rdram,
-#  define RDRAM_ARG1 uint8_t *rdram
-#  define PASS_RDRAM rdram,
-#  define PASS_RDRAM1 rdram
-#  define TO_PTR(type, var) ((type*)(&rdram[(uint64_t)var - 0xFFFFFFFF80000000]))
-#  define GET_MEMBER(type, addr, member) (addr + (intptr_t)&(((type*)nullptr)->member))
-#  ifdef __cplusplus
-#    define NULLPTR (PTR(void))0
-#  endif
-#endif
-
-typedef uint64_t gpr;
-
-#define SIGNED(val) \
-    ((int64_t)(val))
-
-#define ADD32(a, b) \
-    ((gpr)(int32_t)((a) + (b)))
-
-#define SUB32(a, b) \
-    ((gpr)(int32_t)((a) - (b)))
-
-#define MEM_W(offset, reg) \
-    (*(int32_t*)(rdram + ((((reg) + (offset))) - 0xFFFFFFFF80000000)))
-
-#define MEM_H(offset, reg) \
-    (*(int16_t*)(rdram + ((((reg) + (offset)) ^ 2) - 0xFFFFFFFF80000000)))
-
-#define MEM_B(offset, reg) \
-    (*(int8_t*)(rdram + ((((reg) + (offset)) ^ 3) - 0xFFFFFFFF80000000)))
-
-#define MEM_HU(offset, reg) \
-    (*(uint16_t*)(rdram + ((((reg) + (offset)) ^ 2) - 0xFFFFFFFF80000000)))
-
-#define MEM_BU(offset, reg) \
-    (*(uint8_t*)(rdram + ((((reg) + (offset)) ^ 3) - 0xFFFFFFFF80000000)))
-
-#define SD(val, offset, reg) { \
-    *(uint32_t*)(rdram + ((((reg) + (offset) + 4)) - 0xFFFFFFFF80000000)) = (uint32_t)((gpr)(val) >> 0); \
-    *(uint32_t*)(rdram + ((((reg) + (offset) + 0)) - 0xFFFFFFFF80000000)) = (uint32_t)((gpr)(val) >> 32); \
-}
-
-#define GI_TRUE_SKULL_TOKEN GI_75
-
-#define GI_AP_PROG GI_77
-#define GI_AP_FILLER GI_90
-#define GI_AP_USEFUL GI_B3
-
-#define TO_PTR(type, var) ((type*)(&rdram[(uint64_t)var - 0xFFFFFFFF80000000]))
-
-template<int index, typename T>
-T _arg(uint8_t* rdram, recomp_context* ctx) {
-    static_assert(index < 4, "Only args 0 through 3 supported");
-    gpr raw_arg = (&ctx->r4)[index];
-    if constexpr (std::is_same_v<T, float>) {
-        if constexpr (index < 2) {
-            static_assert(index != 1, "Floats in arg 1 not supported");
-            return ctx->f12.fl;
-        }
-        else {
-            // static_assert in else workaround
-            [] <bool flag = false>() {
-                static_assert(flag, "Floats in a2/a3 not supported");
-            }();
-        }
+void glueGetLine(std::ifstream& in, std::string& outString)
+{
+    char c = in.get();
+    
+    while (c != '\r' && c != '\n' && c != '\0' && c != -1)
+    {
+        outString += c;
+        c = in.get();
     }
-    else if constexpr (std::is_pointer_v<T>) {
-        static_assert (!std::is_pointer_v<std::remove_pointer_t<T>>, "Double pointers not supported");
-        return TO_PTR(std::remove_pointer_t<T>, raw_arg);
-    }
-    else if constexpr (std::is_integral_v<T>) {
-        static_assert(sizeof(T) <= 4, "64-bit args not supported");
-        return static_cast<T>(raw_arg);
-    }
-    else {
-        // static_assert in else workaround
-        [] <bool flag = false>() {
-            static_assert(flag, "Unsupported type");
-        }();
-    }
-}
 
-template <typename T>
-void _return(recomp_context* ctx, T val) {
-    static_assert(sizeof(T) <= 4, "Only 32-bit value returns supported currently");
-    if constexpr (std::is_same_v<T, float>) {
-        ctx->f0.fl = val;
-    }
-    else if constexpr (std::is_integral_v<T> && sizeof(T) <= 4) {
-        ctx->r2 = int32_t(val);
-    }
-    else {
-        // static_assert in else workaround
-        [] <bool flag = false>() {
-            static_assert(flag, "Unsupported type");
-        }();
+    c = in.peek();
+
+    while (c == '\r' || c == '\n')
+    {
+        in.get();
+        c = in.peek();
     }
 }
 
