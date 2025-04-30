@@ -100,6 +100,8 @@ int64_t fixLocation(u32 arg)
 
 int64_t last_location_sent;
 
+s16 prices[34];
+
 void syncLocation(int64_t location_id)
 {
     if (location_id == 0)
@@ -167,6 +169,36 @@ extern "C"
                 _return(ctx, false);
                 return;
             }
+        }
+        
+        const char* prices_str = AP_GetSlotDataString(state, "shop_prices");
+        
+        size_t prices_i = 0;
+        size_t str_i = 1;
+        char c = prices_str[0];
+        std::string price_str = "";
+            
+        while (true)
+        {
+            if (c == ' ' || c == 0)
+            {
+                int price = std::stoi(price_str);
+                prices[prices_i] = price;
+                prices_i += 1;
+                price_str = "";
+                
+                c = prices_str[str_i];
+                str_i += 1;
+                
+                if (c == 0)
+                {
+                    break;
+                }
+            }
+            
+            price_str += c;
+            c = prices_str[str_i];
+            str_i += 1;
         }
         
         AP_QueueLocationScoutsAll(state);
@@ -375,6 +407,12 @@ extern "C"
     DLLEXPORT void rando_get_tunic_color(uint8_t* rdram, recomp_context* ctx)
     {
         _return(ctx, (int) AP_GetSlotDataInt(state, "link_tunic_color"));
+    }
+    
+    DLLEXPORT void rando_get_shop_price(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        _return(ctx, (s16) prices[arg]);
     }
     
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
