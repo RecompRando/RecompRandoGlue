@@ -100,7 +100,7 @@ int64_t fixLocation(u32 arg)
 
 int64_t last_location_sent;
 
-s16 prices[34];
+s16 prices[36];
 
 void syncLocation(int64_t location_id)
 {
@@ -173,32 +173,14 @@ extern "C"
         
         const char* prices_str = AP_GetSlotDataString(state, "shop_prices");
         
-        size_t prices_i = 0;
-        size_t str_i = 1;
-        char c = prices_str[0];
-        std::string price_str = "";
-            
-        while (true)
+        std::stringstream prices_ss(prices_str);
+        s16 price;
+        size_t price_i = 0;
+        
+        while (prices_ss >> price)
         {
-            if (c == ' ' || c == 0)
-            {
-                int price = std::stoi(price_str);
-                prices[prices_i] = price;
-                prices_i += 1;
-                price_str = "";
-                
-                c = prices_str[str_i];
-                str_i += 1;
-                
-                if (c == 0)
-                {
-                    break;
-                }
-            }
-            
-            price_str += c;
-            c = prices_str[str_i];
-            str_i += 1;
+            prices[price_i] = price;
+            price_i += 1;
         }
         
         AP_QueueLocationScoutsAll(state);
@@ -649,6 +631,14 @@ extern "C"
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t item_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) arg)));
         _return(ctx, hasItem(item_id));
+    }
+    
+    DLLEXPORT void rando_broadcast_location_hint(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        int64_t location_id = ((int64_t) (((int64_t) 0x3469420000000) | ((int64_t) fixLocation(arg))));
+        AP_QueueLocationScout(state, location_id);
+        AP_SendQueuedLocationScouts(state, 2);
     }
     
     DLLEXPORT void rando_send_location(uint8_t* rdram, recomp_context* ctx)
