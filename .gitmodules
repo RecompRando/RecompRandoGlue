@@ -2,3 +2,6 @@
 	path = lib/APCpp
 	url = https://github.com/RecompRando/APCpp.git
 	branch = main
+[submodule "Archipelago-MM"]
+	path = archipelago
+	url = https://github.com/RecompRando/Archipelago-MM

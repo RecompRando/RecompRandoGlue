@@ -1,0 +1,4 @@
+pyyaml==6.0.2
+schema==0.7.7
+typing_extensions==4.13.2
+websockets==15.0.1

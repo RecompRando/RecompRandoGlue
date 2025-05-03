@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "apcpp-glue.h"
+#include "apcpp-solo-gen.h"
 
 std::string yaml_text{};
 
@@ -38,9 +39,12 @@ RECOMP_DLL_FUNC(rando_yaml_finalize) {
     std::cout << yaml_text;
 
     fs::path savepath(savepath_str);
-    fs::path yamlpath = savepath.parent_path() / "solo.yaml";
+    fs::path yaml_dir = savepath.parent_path() / sologen::yaml_folder;
 
-    std::ofstream out(yamlpath);
+    std::filesystem::create_directories(yaml_dir);    
+    fs::path yaml_path = yaml_dir / sologen::yaml_filename;
+
+    std::ofstream out(yaml_path);
     try {
         out << yaml_text;
     } catch (std::exception e){

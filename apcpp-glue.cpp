@@ -1,8 +1,12 @@
 #include <filesystem>
 #include <fstream>
+#include <chrono>
+#include <iomanip>
+#include <algorithm>
 
 #include "Archipelago.h"
 #include "apcpp-glue.h"
+#include "apcpp-solo-gen.h"
 
 void glueGetLine(std::ifstream& in, std::string& outString)
 {
@@ -23,7 +27,23 @@ void glueGetLine(std::ifstream& in, std::string& outString)
     }
 }
 
+struct SoloSeed {
+    std::u8string seed_name;
+    std::filesystem::file_time_type timestamp;
+    std::string date_string;
+};
+
+struct SoloState {
+    std::vector<SoloSeed> seeds;
+    std::filesystem::path seed_folder;
+};
+
 AP_State* state;
+SoloState solo_state;
+std::u8string room_seed_name;
+
+constexpr std::u8string_view gen_file_prefix = u8"AP_";
+constexpr std::u8string_view gen_file_suffix = u8"_solo.zip";
 
 u32 hasItem(u64 itemId)
 {
@@ -125,6 +145,16 @@ void getStr(uint8_t* rdram, PTR(char) ptr, std::string& outString) {
     }
 }
 
+void getU8Str(uint8_t* rdram, PTR(char) ptr, std::u8string& outString) {
+    char8_t c = MEM_B(0, (gpr) ptr);
+    u32 i = 0;
+    while (c != 0) {
+        outString += c;
+        i += 1;
+        c = MEM_B(i, (gpr) ptr);
+    }
+}
+
 void setStr(uint8_t* rdram, PTR(char) ptr, const char* inString) {
     char c = -1;
     u32 i = 0;
@@ -135,28 +165,44 @@ void setStr(uint8_t* rdram, PTR(char) ptr, const char* inString) {
     }
 }
 
+void setU8Str(uint8_t* rdram, PTR(u8) ptr, const char8_t* inString) {
+    char8_t c = -1;
+    u32 i = 0;
+    while (c != 0) {
+        c = inString[i];
+        MEM_B(i, (gpr) ptr) = c;
+        i += 1;
+    }
+}
+
+std::string format_file_time(std::filesystem::file_time_type time) {
+    std::chrono::system_clock::time_point time_system = std::chrono::clock_cast<std::chrono::system_clock>(time);
+    std::time_t time_c = std::chrono::system_clock::to_time_t(time_system);
+    std::tm time_tm;
+    bool success;
+
+#if _WIN32
+    success = localtime_s(&time_tm, &time_c) == 0;
+#else
+    success = localtime_r(&time_c, &time_tm) != nullptr;
+#endif
+
+    if (!success) {
+        return "ERR";
+    }
+
+    std::stringstream sstream{};
+
+    sstream << std::put_time(&time_tm, "%b %e %y %I:%M:%S %p");
+
+    return sstream.str();
+}
+
 extern "C"
 {
     DLLEXPORT u32 recomp_api_version = 1;
-    
-    DLLEXPORT void rando_init(uint8_t* rdram, recomp_context* ctx)
-    {
-        std::string address;
-        std::string playerName;
-        std::string password;
-        
-        PTR(char) address_ptr = _arg<0, PTR(char)>(rdram, ctx);
-        PTR(char) player_name_ptr = _arg<1, PTR(char)>(rdram, ctx);
-        PTR(char) password_ptr = _arg<2, PTR(char)>(rdram, ctx);
-        
-        getStr(rdram, address_ptr, address);
-        getStr(rdram, player_name_ptr, playerName);
-        getStr(rdram, password_ptr, password);
-        
-        state = AP_New();
-        AP_Init(state, address.c_str(), "Majora's Mask Recompiled", playerName.c_str(), password.c_str());
-        //AP_Init("apsolostartinventory.json");
-        
+
+    bool rando_init_common() {
         AP_SetDeathLinkSupported(state, true);
         
         AP_Start(state);
@@ -166,8 +212,7 @@ extern "C"
             if (AP_GetConnectionStatus(state) == AP_ConnectionStatus::ConnectionRefused || AP_GetConnectionStatus(state) == AP_ConnectionStatus::NotFound)
             {
                 AP_Stop(state);
-                _return(ctx, false);
-                return;
+                return false;
             }
         }
         
@@ -264,8 +309,172 @@ extern "C"
         }
         
         AP_SendQueuedLocationScouts(state, 0);
+
+        return true;
+    }
+    
+    DLLEXPORT void rando_init(uint8_t* rdram, recomp_context* ctx)
+    {
+        std::string address;
+        std::string playerName;
+        std::string password;
         
-        _return(ctx, true);
+        PTR(char) address_ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) player_name_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        PTR(char) password_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        
+        getStr(rdram, address_ptr, address);
+        getStr(rdram, player_name_ptr, playerName);
+        getStr(rdram, password_ptr, password);
+        
+        state = AP_New();
+        AP_Init(state, address.c_str(), "Majora's Mask Recompiled", playerName.c_str(), password.c_str());
+
+        bool success = rando_init_common();
+        if (success) {
+            AP_RoomInfo roomInfo{};
+            AP_GetRoomInfo(state, &roomInfo);
+            room_seed_name = std::u8string{ reinterpret_cast<const char8_t*>(roomInfo.seed_name.data()), roomInfo.seed_name.size() };
+        }
+
+        _return<u32>(ctx, success);
+    }
+
+    DLLEXPORT void rando_init_solo(uint8_t* rdram, recomp_context* ctx) {
+        u32 selected_seed = _arg<0, u32>(rdram, ctx);
+
+        if (selected_seed >= solo_state.seeds.size()) {
+            _return<u32>(ctx, false);
+            return;
+        }
+
+        state = AP_New();
+        const std::u8string& seed = solo_state.seeds[selected_seed].seed_name;
+        std::filesystem::path gen_file = solo_state.seed_folder / (std::u8string{ gen_file_prefix } + seed + std::u8string{ gen_file_suffix });
+        AP_InitSolo(state, reinterpret_cast<const char*>(gen_file.u8string().c_str()), reinterpret_cast<const char*>(seed.c_str()));
+
+        bool success = rando_init_common();
+        if (success) {
+            room_seed_name = seed;
+        }
+        
+        _return<u32>(ctx, success);
+    }
+
+    DLLEXPORT void rando_scan_solo_seeds(uint8_t* rdram, recomp_context* ctx) {
+        std::u8string save_file_path_str;
+        PTR(char) save_file_path_ptr = _arg<0, PTR(char)>(rdram, ctx);
+
+        getU8Str(rdram, save_file_path_ptr, save_file_path_str);
+
+        std::filesystem::path save_file_path{ save_file_path_str };
+
+        solo_state.seed_folder = save_file_path.parent_path();
+        solo_state.seeds.clear();
+
+        for (const auto& file : std::filesystem::directory_iterator{ solo_state.seed_folder }) {
+            std::error_code ec;
+            if (file.is_regular_file(ec)) {
+                std::filesystem::path filename = file.path().filename();
+                std::u8string filename_str = filename.u8string();
+                if (filename_str.starts_with(gen_file_prefix) && filename_str.ends_with(gen_file_suffix)) {
+                    // TODO use platform-specific APIs to get the actual file creation time instead of using the last write time.
+                    std::filesystem::file_time_type timestamp = std::filesystem::last_write_time(file);
+
+                    solo_state.seeds.emplace_back(SoloSeed {
+                        .seed_name = filename_str.substr(gen_file_prefix.size(), filename_str.size() - gen_file_prefix.size() - gen_file_suffix.size()),
+                        .timestamp = timestamp,
+                        .date_string = format_file_time(timestamp)
+                    });
+                }
+            }
+        }
+
+        // Sort the seeds by timestamp descending.
+        std::sort(solo_state.seeds.begin(), solo_state.seeds.end(),
+            [](const SoloSeed& lhs, const SoloSeed& rhs) {
+                return lhs.timestamp > rhs.timestamp;
+            }
+        );
+    }
+
+    DLLEXPORT void rando_solo_count(uint8_t* rdram, recomp_context* ctx) {
+        _return(ctx, static_cast<u32>(solo_state.seeds.size()));
+    }
+
+    DLLEXPORT void rando_solo_get_seed_name(uint8_t* rdram, recomp_context* ctx) {
+        u32 seed_index = _arg<0, u32>(rdram, ctx);
+        PTR(char) seed_name_out = _arg<1, PTR(char)>(rdram, ctx);
+        u32 seed_name_out_len = _arg<2, u32>(rdram, ctx);
+
+        if (seed_index >= solo_state.seeds.size()) {
+            _return<u32>(ctx, 0);
+            return;
+        }
+        
+        const std::u8string& solo_seed_name = solo_state.seeds[seed_index].seed_name;
+        u32 seed_name_size = static_cast<u32>(solo_seed_name.size() + 1);
+        
+        if (seed_name_out_len == 0) {
+            // Write nothing if the output length is 0.
+        }
+        else if (solo_seed_name.size() + 1 >= seed_name_out_len) {
+            setU8Str(rdram, seed_name_out, solo_seed_name.substr(0, seed_name_out_len - 1).c_str());
+        }
+        else {
+            setU8Str(rdram, seed_name_out, solo_seed_name.c_str());
+        }
+
+        _return<u32>(ctx, seed_name_size);
+    }
+
+    DLLEXPORT void rando_solo_get_generation_date(uint8_t* rdram, recomp_context* ctx) {
+        u32 seed_index = _arg<0, u32>(rdram, ctx);
+        PTR(char) seed_date_out = _arg<1, PTR(char)>(rdram, ctx);
+        u32 seed_date_out_len = _arg<2, u32>(rdram, ctx);
+
+        if (seed_index >= solo_state.seeds.size()) {
+            _return<u32>(ctx, 0);
+            return;
+        }
+        
+        const std::string& seed_date = solo_state.seeds[seed_index].date_string;
+        u32 seed_date_size = static_cast<u32>(seed_date.size() + 1);
+        
+        if (seed_date_out_len == 0) {
+            // Write nothing if the output length is 0.
+        }
+        else if (seed_date.size() + 1 >= seed_date_out_len) {
+            setStr(rdram, seed_date_out, seed_date.substr(0, seed_date_out_len - 1).c_str());
+        }
+        else {
+            setStr(rdram, seed_date_out, seed_date.c_str());
+        }
+
+        _return<u32>(ctx, seed_date_size);
+    }
+
+    DLLEXPORT void rando_get_seed_name(uint8_t* rdram, recomp_context* ctx) {
+        PTR(char) seed_name_out = _arg<0, PTR(char)>(rdram, ctx);
+        u32 seed_name_out_len = _arg<1, u32>(rdram, ctx);
+        
+        u32 seed_name_size = static_cast<u32>(room_seed_name.size() + 1);
+        
+        if (seed_name_out_len == 0) {
+            // Write nothing if the output length is 0.
+        }
+        else if (room_seed_name.size() + 1 >= seed_name_out_len) {
+            setU8Str(rdram, seed_name_out, room_seed_name.substr(0, seed_name_out_len - 1).c_str());
+        }
+        else {
+            setU8Str(rdram, seed_name_out, room_seed_name.c_str());
+        }
+
+        _return<u32>(ctx, seed_name_size);
+    }
+
+    DLLEXPORT void rando_solo_generate(uint8_t* rdram, recomp_context* ctx) {
+        _return<u32>(ctx, sologen::generate(solo_state.seed_folder / sologen::yaml_folder, solo_state.seed_folder));
     }
     
     DLLEXPORT void rando_skulltulas_enabled(uint8_t* rdram, recomp_context* ctx)
