@@ -275,6 +275,9 @@ extern "C"
         if (AP_GetSlotDataInt(state, "shopsanity") != 2)
         {
             AP_RemoveQueuedLocationScout(state, 0x346942005481E);
+            AP_RemoveQueuedLocationScout(state, 0x3469420024234);
+            AP_RemoveQueuedLocationScout(state, 0x3469420090013);
+            AP_RemoveQueuedLocationScout(state, 0x3469420090015);
             
             if (AP_GetSlotDataInt(state, "shopsanity") == 1)
             {
