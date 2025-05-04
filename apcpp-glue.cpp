@@ -175,9 +175,17 @@ void setU8Str(uint8_t* rdram, PTR(u8) ptr, const char8_t* inString) {
     }
 }
 
+template <typename TP>
+std::time_t time_point_to_time_t(TP tp)
+{
+    // Approximation that uses two now calls to avoid relying on C++20 clock_cast. 
+    auto sctp = time_point_cast<std::chrono::system_clock::duration>(tp - TP::clock::now()
+              + std::chrono::system_clock::now());
+    return std::chrono::system_clock::to_time_t(sctp);
+}
+
 std::string format_file_time(std::filesystem::file_time_type time) {
-    std::chrono::system_clock::time_point time_system = std::chrono::clock_cast<std::chrono::system_clock>(time);
-    std::time_t time_c = std::chrono::system_clock::to_time_t(time_system);
+    std::time_t time_c = time_point_to_time_t(time);
     std::tm time_tm;
     bool success;
 
