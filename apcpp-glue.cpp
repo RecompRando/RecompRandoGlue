@@ -287,6 +287,11 @@ extern "C"
             AP_RemoveQueuedLocationScout(state, 0x3469420090013);
             AP_RemoveQueuedLocationScout(state, 0x3469420090015);
             
+            AP_RemoveQueuedLocationScout(state, 0x346942007C402);
+            AP_RemoveQueuedLocationScout(state, 0x346942007C404);
+            AP_RemoveQueuedLocationScout(state, 0x346942007C405);
+            AP_RemoveQueuedLocationScout(state, 0x346942007C407);
+            
             if (AP_GetSlotDataInt(state, "shopsanity") == 1)
             {
                 for (int i = SI_FAIRY_2; i <= SI_POTION_RED_3; ++i)
