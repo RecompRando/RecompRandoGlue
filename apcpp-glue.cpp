@@ -284,8 +284,6 @@ extern "C"
         {
             AP_RemoveQueuedLocationScout(state, 0x346942005481E);
             AP_RemoveQueuedLocationScout(state, 0x3469420024234);
-            AP_RemoveQueuedLocationScout(state, 0x3469420090013);
-            AP_RemoveQueuedLocationScout(state, 0x3469420090015);
             
             AP_RemoveQueuedLocationScout(state, 0x346942007C402);
             AP_RemoveQueuedLocationScout(state, 0x346942007C404);
@@ -299,7 +297,7 @@ extern "C"
                     int64_t location_id = 0x3469420090000 | i;
                     AP_RemoveQueuedLocationScout(state, location_id);
                 }
-
+                
                 AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_BOMB_3);
                 AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_ARROWS_SMALL_3);
                 AP_RemoveQueuedLocationScout(state, 0x3469420090000 | SI_POTION_RED_6);
@@ -312,11 +310,14 @@ extern "C"
                     {
                         continue;
                     }
-
+                    
                     int64_t location_id = 0x3469420090000 | i;
                     AP_RemoveQueuedLocationScout(state, location_id);
                 }
-
+                
+                AP_RemoveQueuedLocationScout(state, 0x3469420090013);
+                AP_RemoveQueuedLocationScout(state, 0x3469420090015);
+                
                 AP_RemoveQueuedLocationScout(state, 0x3469420026392);
                 AP_RemoveQueuedLocationScout(state, 0x3469420090000 | GI_CHATEAU);
                 AP_RemoveQueuedLocationScout(state, 0x3469420006792);
