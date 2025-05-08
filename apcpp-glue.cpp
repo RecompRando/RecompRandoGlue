@@ -205,6 +205,65 @@ extern "C"
         _return<u32>(ctx, seed_name_size);
     }
     
+    DLLEXPORT void rando_get_datastorage_u32_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        key += "_P" + std::to_string(AP_GetPlayerID(state));
+        char* value_char_ptr = AP_GetDataStorageSync(state, key.c_str());
+
+        u32 value = 0;
+
+        if (strncmp(value_char_ptr, "null", 4) != 0)
+        {
+            value = std::stoi(value_char_ptr);
+        }
+
+        _return(ctx, value);
+    }
+    
+    DLLEXPORT void rando_set_datastorage_u32_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        u32 value = _arg<1, u32>(rdram, ctx);
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        key += "_P" + std::to_string(AP_GetPlayerID(state));
+
+        try
+        {
+            AP_SetDataStorageSync(state, key.c_str(), (char*) std::to_string(value).c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
+    }
+    
+    DLLEXPORT void rando_set_datastorage_u32_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        u32 value = _arg<1, u32>(rdram, ctx);
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        key += "_P" + std::to_string(AP_GetPlayerID(state));
+
+        try
+        {
+            AP_SetDataStorageAsync(state, key.c_str(), (char*) std::to_string(value).c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
+    }
+    
     DLLEXPORT void rando_get_death_link_pending(uint8_t* rdram, recomp_context* ctx)
     {
         _return(ctx, AP_DeathLinkPending(state));
