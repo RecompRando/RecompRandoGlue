@@ -155,20 +155,17 @@ extern "C"
     
     DLLEXPORT void rando_init(uint8_t* rdram, recomp_context* ctx)
     {
-        PTR(char) arg = _arg<0, PTR(char)>(rdram, ctx);
-        
-        std::string game_name = "";
-        
-        getStr(rdram, arg, game_name);
-        
+        std::string game_name;
         std::string address;
         std::string playerName;
         std::string password;
         
-        PTR(char) address_ptr = _arg<0, PTR(char)>(rdram, ctx);
-        PTR(char) player_name_ptr = _arg<1, PTR(char)>(rdram, ctx);
-        PTR(char) password_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        PTR(char) game_name_ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) address_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        PTR(char) player_name_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        PTR(char) password_ptr = _arg<3, PTR(char)>(rdram, ctx);
         
+        getStr(rdram, game_name_ptr, game_name);
         getStr(rdram, address_ptr, address);
         getStr(rdram, player_name_ptr, playerName);
         getStr(rdram, password_ptr, password);
