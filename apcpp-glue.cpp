@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <fstream>
+#include <thread>
 #include <chrono>
 #include <iomanip>
 #include <algorithm>
@@ -129,29 +130,32 @@ std::string format_file_time(std::filesystem::file_time_type time) {
     return sstream.str();
 }
 
+void rando_init_common() {
+    AP_SetDeathLinkSupported(state, true);
+    
+    AP_Start(state);
+    
+    while (!AP_IsConnected(state))
+    {
+        if (AP_GetConnectionStatus(state) == AP_ConnectionStatus::ConnectionRefused || AP_GetConnectionStatus(state) == AP_ConnectionStatus::NotFound)
+        {
+            AP_Stop(state);
+            return;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    }
+    
+    AP_QueueLocationScoutsAll(state);
+    AP_SendQueuedLocationScouts(state, 0);
+    
+    AP_RoomInfo roomInfo{};
+    AP_GetRoomInfo(state, &roomInfo);
+    room_seed_name = std::u8string{ reinterpret_cast<const char8_t*>(roomInfo.seed_name.data()), roomInfo.seed_name.size() };
+}
+
 extern "C"
 {
     DLLEXPORT u32 recomp_api_version = 1;
-
-    bool rando_init_common() {
-        AP_SetDeathLinkSupported(state, true);
-        
-        AP_Start(state);
-        
-        while (!AP_IsConnected(state))
-        {
-            if (AP_GetConnectionStatus(state) == AP_ConnectionStatus::ConnectionRefused || AP_GetConnectionStatus(state) == AP_ConnectionStatus::NotFound)
-            {
-                AP_Stop(state);
-                return false;
-            }
-        }
-        
-        AP_QueueLocationScoutsAll(state);
-        AP_SendQueuedLocationScouts(state, 0);
-
-        return true;
-    }
     
     DLLEXPORT void rando_init(uint8_t* rdram, recomp_context* ctx)
     {
@@ -172,17 +176,19 @@ extern "C"
         
         state = AP_New();
         AP_Init(state, address.c_str(), game_name.c_str(), playerName.c_str(), password.c_str());
-
-        bool success = rando_init_common();
-        if (success) {
-            AP_RoomInfo roomInfo{};
-            AP_GetRoomInfo(state, &roomInfo);
-            room_seed_name = std::u8string{ reinterpret_cast<const char8_t*>(roomInfo.seed_name.data()), roomInfo.seed_name.size() };
-        }
-
-        _return<u32>(ctx, success);
+        
+        std::thread init_thread(rando_init_common);
+        init_thread.detach();
     }
-
+    
+    DLLEXPORT void rando_is_connected(uint8_t* rdram, recomp_context* ctx) {
+        _return<bool>(ctx, state != nullptr && AP_IsInit(state) && AP_IsConnected(state));
+    }
+    
+    DLLEXPORT void rando_connect_failed(uint8_t* rdram, recomp_context* ctx) {
+        _return<bool>(ctx, state != nullptr && AP_IsInit(state) && !AP_IsConnected(state) && (AP_GetConnectionStatus(state) == AP_ConnectionStatus::ConnectionRefused || AP_GetConnectionStatus(state) == AP_ConnectionStatus::NotFound));
+    }
+    
     DLLEXPORT void rando_get_seed_name(uint8_t* rdram, recomp_context* ctx) {
         PTR(char) seed_name_out = _arg<0, PTR(char)>(rdram, ctx);
         u32 seed_name_out_len = _arg<1, u32>(rdram, ctx);
