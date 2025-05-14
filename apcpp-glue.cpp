@@ -147,10 +147,6 @@ void rando_init_common() {
     
     AP_QueueLocationScoutsAll(state);
     AP_SendQueuedLocationScouts(state, 0);
-    
-    AP_RoomInfo roomInfo{};
-    AP_GetRoomInfo(state, &roomInfo);
-    room_seed_name = std::u8string{ reinterpret_cast<const char8_t*>(roomInfo.seed_name.data()), roomInfo.seed_name.size() };
 }
 
 extern "C"
@@ -194,7 +190,9 @@ extern "C"
         u32 seed_name_out_len = _arg<1, u32>(rdram, ctx);
         
         u32 seed_name_size = static_cast<u32>(room_seed_name.size() + 1);
-        
+        AP_RoomInfo roomInfo{};
+        AP_GetRoomInfo(state, &roomInfo);
+        room_seed_name = std::u8string{ reinterpret_cast<const char8_t*>(roomInfo.seed_name.data()), roomInfo.seed_name.size() };
         if (seed_name_out_len == 0) {
             // Write nothing if the output length is 0.
         }
