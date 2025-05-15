@@ -212,12 +212,37 @@ extern "C"
 
         std::string key = "";
         getStr(rdram, ptr, key);
+        key += "_P" + std::to_string(AP_GetPlayerID(state));
+        u32 value = (u32) (AP_GetSlotDataInt(state, key.c_str()) & 0xFFFFFFFF);
+
+        _return(ctx, value);
+    }
+    
+    DLLEXPORT void rando_get_global_slotdata_u32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+
+        std::string key = "";
+        getStr(rdram, ptr, key);
         u32 value = (u32) (AP_GetSlotDataInt(state, key.c_str()) & 0xFFFFFFFF);
 
         _return(ctx, value);
     }
     
     DLLEXPORT void rando_get_slotdata_string(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) ret_ptr = _arg<1, PTR(char)>(rdram, ctx);
+
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        key += "_P" + std::to_string(AP_GetPlayerID(state));
+        const char* value = AP_GetSlotDataString(state, key.c_str());
+
+        setStr(rdram, ret_ptr, value);
+    }
+    
+    DLLEXPORT void rando_get_global_slotdata_string(uint8_t* rdram, recomp_context* ctx)
     {
         PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
         PTR(char) ret_ptr = _arg<1, PTR(char)>(rdram, ctx);
@@ -248,6 +273,24 @@ extern "C"
         _return(ctx, value);
     }
     
+    DLLEXPORT void rando_get_global_datastorage_u32_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        char* value_char_ptr = AP_GetDataStorageSync(state, key.c_str());
+
+        u32 value = 0;
+
+        if (strncmp(value_char_ptr, "null", 4) != 0)
+        {
+            value = std::stoi(value_char_ptr);
+        }
+
+        _return(ctx, value);
+    }
+    
     DLLEXPORT void rando_get_datastorage_string_sync(uint8_t* rdram, recomp_context* ctx)
     {
         PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
@@ -256,6 +299,18 @@ extern "C"
         std::string key = "";
         getStr(rdram, ptr, key);
         key += "_P" + std::to_string(AP_GetPlayerID(state));
+        char* value = AP_GetDataStorageSync(state, key.c_str());
+
+        setStr(rdram, ret_ptr, value);
+    }
+    
+    DLLEXPORT void rando_get_global_datastorage_string_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) ret_ptr = _arg<1, PTR(char)>(rdram, ctx);
+
+        std::string key = "";
+        getStr(rdram, ptr, key);
         char* value = AP_GetDataStorageSync(state, key.c_str());
 
         setStr(rdram, ret_ptr, value);
@@ -281,6 +336,25 @@ extern "C"
         }
     }
     
+    DLLEXPORT void rando_set_global_datastorage_u32_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        u32 value = _arg<1, u32>(rdram, ctx);
+        std::string key = "";
+        getStr(rdram, ptr, key);
+
+        try
+        {
+            AP_SetDataStorageSync(state, key.c_str(), (char*) std::to_string(value).c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
+    }
+    
     DLLEXPORT void rando_set_datastorage_u32_async(uint8_t* rdram, recomp_context* ctx)
     {
         PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
@@ -288,6 +362,25 @@ extern "C"
         std::string key = "";
         getStr(rdram, ptr, key);
         key += "_P" + std::to_string(AP_GetPlayerID(state));
+
+        try
+        {
+            AP_SetDataStorageAsync(state, key.c_str(), (char*) std::to_string(value).c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
+    }
+    
+    DLLEXPORT void rando_set_global_datastorage_u32_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        u32 value = _arg<1, u32>(rdram, ctx);
+        std::string key = "";
+        getStr(rdram, ptr, key);
 
         try
         {
@@ -326,6 +419,29 @@ extern "C"
         }
     }
     
+    DLLEXPORT void rando_set_global_datastorage_string_sync(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) value_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        
+        std::string value = "";
+        getStr(rdram, value_ptr, value);
+
+        try
+        {
+            AP_SetDataStorageSync(state, key.c_str(), (char*) value.c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
+    }
+    
     DLLEXPORT void rando_set_datastorage_string_async(uint8_t* rdram, recomp_context* ctx)
     {
         PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
@@ -338,6 +454,29 @@ extern "C"
         getStr(rdram, value_ptr, value);
         
         key += "_P" + std::to_string(AP_GetPlayerID(state));
+
+        try
+        {
+            AP_SetDataStorageAsync(state, key.c_str(), (char*) value.c_str());
+        }
+
+        catch (std::exception e)
+        {
+            fprintf(stderr, "error setting datastorage u32\n");
+            fprintf(stderr, e.what());
+        }
+    }
+    
+    DLLEXPORT void rando_set_global_datastorage_string_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) value_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        
+        std::string key = "";
+        getStr(rdram, ptr, key);
+        
+        std::string value = "";
+        getStr(rdram, value_ptr, value);
 
         try
         {
@@ -376,6 +515,11 @@ extern "C"
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location = arg;
         _return(ctx, (int) AP_GetLocationItemType(state, location));
+    }
+    
+    DLLEXPORT void rando_get_own_team_id(uint8_t* rdram, recomp_context* ctx)
+    {
+        _return(ctx, ((u32) AP_GetTeamID(state)));
     }
     
     DLLEXPORT void rando_get_own_slot_id(uint8_t* rdram, recomp_context* ctx)
