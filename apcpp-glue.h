@@ -151,7 +151,7 @@ T _arg(uint8_t* rdram, recomp_context* ctx) {
         return TO_PTR(std::remove_pointer_t<T>, raw_arg);
     }
     else if constexpr (std::is_integral_v<T>) {
-        static_assert(sizeof(T) <= 4, "64-bit args not supported");
+        //~ static_assert(sizeof(T) <= 4, "64-bit args not supported");
         return static_cast<T>(raw_arg);
     }
     else {
@@ -206,12 +206,15 @@ std::u8string _arg_u8string(uint8_t* rdram, recomp_context* ctx) {
 
 template <typename T>
 void _return(recomp_context* ctx, T val) {
-    static_assert(sizeof(T) <= 4, "Only 32-bit value returns supported currently");
+    static_assert(sizeof(T) <= 8, "Only 64-bit or lower value returns supported currently");
     if constexpr (std::is_same_v<T, float>) {
         ctx->f0.fl = val;
     }
     else if constexpr (std::is_integral_v<T> && sizeof(T) <= 4) {
         ctx->r2 = int32_t(val);
+    }
+    else if constexpr (std::is_integral_v<T> && sizeof(T) <= 8) {
+        ctx->r2 = int64_t(val);
     }
     else {
         // static_assert in else workaround

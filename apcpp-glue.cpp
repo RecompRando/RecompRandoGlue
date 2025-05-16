@@ -212,18 +212,6 @@ extern "C"
 
         std::string key = "";
         getStr(rdram, ptr, key);
-        key += "_P" + std::to_string(AP_GetPlayerID(state));
-        u32 value = (u32) (AP_GetSlotDataInt(state, key.c_str()) & 0xFFFFFFFF);
-
-        _return(ctx, value);
-    }
-    
-    DLLEXPORT void rando_get_global_slotdata_u32(uint8_t* rdram, recomp_context* ctx)
-    {
-        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
-
-        std::string key = "";
-        getStr(rdram, ptr, key);
         u32 value = (u32) (AP_GetSlotDataInt(state, key.c_str()) & 0xFFFFFFFF);
 
         _return(ctx, value);
@@ -236,22 +224,55 @@ extern "C"
 
         std::string key = "";
         getStr(rdram, ptr, key);
-        key += "_P" + std::to_string(AP_GetPlayerID(state));
         const char* value = AP_GetSlotDataString(state, key.c_str());
 
         setStr(rdram, ret_ptr, value);
     }
     
-    DLLEXPORT void rando_get_global_slotdata_string(uint8_t* rdram, recomp_context* ctx)
+    DLLEXPORT void rando_get_slotdata_raw(uint8_t* rdram, recomp_context* ctx)
     {
-        PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
-        PTR(char) ret_ptr = _arg<1, PTR(char)>(rdram, ctx);
-
-        std::string key = "";
-        getStr(rdram, ptr, key);
-        const char* value = AP_GetSlotDataString(state, key.c_str());
-
-        setStr(rdram, ret_ptr, value);
+        PTR(char) key_ptr = _arg<0, PTR(char)>(rdram, ctx);
+        
+        std::string key;
+        getStr(rdram, key_ptr, key);
+        
+        uintptr_t jsonValue = AP_GetSlotDataRaw(state, key.c_str());
+        
+        _return(ctx, (u64) jsonValue);
+    }
+    
+    DLLEXPORT void rando_access_slotdata_raw_array(uint8_t* rdram, recomp_context* ctx)
+    {
+        u64 jsonValue = _arg<0, u64>(rdram, ctx);
+        u32 index = _arg<2, u32>(rdram, ctx);
+        
+        _return(ctx, (u64) AP_AccessSlotDataRawArray(state, (uintptr_t) jsonValue, index));
+    }
+    
+    DLLEXPORT void rando_access_slotdata_raw_dict(uint8_t* rdram, recomp_context* ctx)
+    {
+        u64 jsonValue = _arg<0, u64>(rdram, ctx);
+        PTR(char) key_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        
+        std::string key;
+        getStr(rdram, key_ptr, key);
+        
+        _return(ctx, (u64) AP_AccessSlotDataRawDict(state, (uintptr_t) jsonValue, key.c_str()));
+    }
+    
+    DLLEXPORT void rando_access_slotdata_raw_u32(uint8_t* rdram, recomp_context* ctx)
+    {
+        u64 jsonValue = _arg<0, u64>(rdram, ctx);
+        
+        _return(ctx, (u32) (AP_AccessSlotDataRawInt(state, (uintptr_t) jsonValue) & 0xFFFFFFFF));
+    }
+    
+    DLLEXPORT void rando_access_slotdata_raw_string(uint8_t* rdram, recomp_context* ctx)
+    {
+        u64 jsonValue = _arg<0, u64>(rdram, ctx);
+        PTR(char) str_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        
+        setStr(rdram, str_ptr, AP_AccessSlotDataRawString(state, jsonValue));
     }
     
     DLLEXPORT void rando_get_datastorage_u32_sync(uint8_t* rdram, recomp_context* ctx)
