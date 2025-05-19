@@ -8,6 +8,11 @@
 #include "Archipelago.h"
 #include "apcpp-glue.h"
 
+#define UPPER(v) ((((uint64_t) v) >> 32) & 0xFFFFFFFF)
+#define LOWER(v) (((uint64_t) v) & 0xFFFFFFFF)
+
+#define CRAFT_64(upper, lower) ((uint64_t) (((uint64_t) (((uint64_t) upper) << 32)) | ((uint64_t) lower)))
+
 void glueGetLine(std::ifstream& in, std::string& outString)
 {
     char c = in.get();
@@ -241,12 +246,42 @@ extern "C"
         _return(ctx, (u64) jsonValue);
     }
     
+    DLLEXPORT void rando_get_slotdata_raw_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) key_ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(u32) out_ptr = _arg<1, PTR(u32)>(rdram, ctx);
+        
+        std::string key;
+        getStr(rdram, key_ptr, key);
+        
+        uintptr_t jsonValue = AP_GetSlotDataRaw(state, key.c_str());
+        
+        MEM_W(out_ptr, 0) = UPPER(jsonValue);
+        MEM_W(out_ptr, 4) = LOWER(jsonValue);
+    }
+    
     DLLEXPORT void rando_access_slotdata_raw_array(uint8_t* rdram, recomp_context* ctx)
     {
         u64 jsonValue = _arg<0, u64>(rdram, ctx);
         u32 index = _arg<2, u32>(rdram, ctx);
         
         _return(ctx, (u64) AP_AccessSlotDataRawArray(state, (uintptr_t) jsonValue, index));
+    }
+    
+    DLLEXPORT void rando_access_slotdata_raw_array_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
+        u32 index = _arg<1, u32>(rdram, ctx);
+        PTR(u32) out_ptr = _arg<2, PTR(u32)>(rdram, ctx);
+        
+        u32 upper = MEM_W(in_ptr, 0);
+        u32 lower = MEM_W(in_ptr, 4);
+        
+        uintptr_t jsonValue = CRAFT_64(upper, lower);
+        jsonValue = AP_AccessSlotDataRawArray(state, jsonValue, index);
+        
+        MEM_W(out_ptr, 0) = UPPER(jsonValue);
+        MEM_W(out_ptr, 4) = LOWER(jsonValue);
     }
     
     DLLEXPORT void rando_access_slotdata_raw_dict(uint8_t* rdram, recomp_context* ctx)
@@ -260,6 +295,25 @@ extern "C"
         _return(ctx, (u64) AP_AccessSlotDataRawDict(state, (uintptr_t) jsonValue, key.c_str()));
     }
     
+    DLLEXPORT void rando_access_slotdata_raw_dict_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
+        PTR(char) key_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        PTR(u32) out_ptr = _arg<2, PTR(u32)>(rdram, ctx);
+        
+        u32 upper = MEM_W(in_ptr, 0);
+        u32 lower = MEM_W(in_ptr, 4);
+        
+        std::string key;
+        getStr(rdram, key_ptr, key);
+        
+        uintptr_t jsonValue = CRAFT_64(upper, lower);
+        jsonValue = AP_AccessSlotDataRawDict(state, jsonValue, key.c_str());
+        
+        MEM_W(out_ptr, 0) = UPPER(jsonValue);
+        MEM_W(out_ptr, 4) = LOWER(jsonValue);
+    }
+    
     DLLEXPORT void rando_access_slotdata_raw_u32(uint8_t* rdram, recomp_context* ctx)
     {
         u64 jsonValue = _arg<0, u64>(rdram, ctx);
@@ -267,10 +321,35 @@ extern "C"
         _return(ctx, (u32) (AP_AccessSlotDataRawInt(state, (uintptr_t) jsonValue) & 0xFFFFFFFF));
     }
     
+    DLLEXPORT void rando_access_slotdata_raw_u32_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
+        
+        u32 upper = MEM_W(in_ptr, 0);
+        u32 lower = MEM_W(in_ptr, 4);
+        
+        uintptr_t jsonValue = CRAFT_64(upper, lower);
+        
+        _return(ctx, (u32) (AP_AccessSlotDataRawInt(state, jsonValue) & 0xFFFFFFFF));
+    }
+    
     DLLEXPORT void rando_access_slotdata_raw_string(uint8_t* rdram, recomp_context* ctx)
     {
         u64 jsonValue = _arg<0, u64>(rdram, ctx);
         PTR(char) str_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        
+        setStr(rdram, str_ptr, AP_AccessSlotDataRawString(state, (uintptr_t) jsonValue));
+    }
+    
+    DLLEXPORT void rando_access_slotdata_raw_string_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
+        PTR(char) str_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        
+        u32 upper = MEM_W(in_ptr, 0);
+        u32 lower = MEM_W(in_ptr, 4);
+        
+        uintptr_t jsonValue = CRAFT_64(upper, lower);
         
         setStr(rdram, str_ptr, AP_AccessSlotDataRawString(state, jsonValue));
     }
