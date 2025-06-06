@@ -149,9 +149,6 @@ void rando_init_common() {
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    
-    AP_QueueLocationScoutsAll(state);
-    AP_SendQueuedLocationScouts(state, 0);
 }
 
 extern "C"
@@ -705,6 +702,32 @@ extern "C"
         int64_t location_id = (int64_t) arg;
         AP_QueueLocationScout(state, location_id);
         AP_SendQueuedLocationScouts(state, 2);
+    }
+    
+    DLLEXPORT void rando_queue_scout(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        int64_t location_id = (int64_t) arg;
+        AP_QueueLocationScout(state, location_id);
+    }
+    
+    DLLEXPORT void rando_queue_scouts_all(uint8_t* rdram, recomp_context* ctx)
+    {
+        AP_QueueLocationScoutsAll(state);
+    }
+    
+    DLLEXPORT void rando_removed_queued_scout(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        int64_t location_id = (int64_t) arg;
+        AP_RemoveQueuedLocationScout(state, location_id);
+    }
+    
+    DLLEXPORT void rando_send_queued_scouts(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        int hint = (int) arg;
+        AP_SendQueuedLocationScouts(state, hint);
     }
     
     DLLEXPORT void rando_send_location(uint8_t* rdram, recomp_context* ctx)
