@@ -272,6 +272,12 @@ extern "C"
         _return(ctx, hasItem(item_id));
     }
     
+    DLLEXPORT void rando_has_item_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        int64_t item_id = (int64_t) _arg<0, u32>(rdram, ctx);
+        _return(ctx, hasItem(item_id));
+    }
+    
     DLLEXPORT void rando_send_location(uint8_t* rdram, recomp_context* ctx)
     {
         int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
@@ -292,6 +298,12 @@ extern "C"
     {
         int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
         syncLocation(location_id);
+        _return(ctx, AP_GetLocationIsChecked(state, location_id));
+    }
+    
+    DLLEXPORT void rando_location_is_checked_async(uint8_t* rdram, recomp_context* ctx)
+    {
+        int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
         _return(ctx, AP_GetLocationIsChecked(state, location_id));
     }
     
