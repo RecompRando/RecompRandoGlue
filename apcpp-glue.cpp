@@ -716,7 +716,7 @@ extern "C"
         AP_QueueLocationScoutsAll(state);
     }
     
-    DLLEXPORT void rando_removed_queued_scout(uint8_t* rdram, recomp_context* ctx)
+    DLLEXPORT void rando_remove_queued_scout(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location_id = (int64_t) arg;
