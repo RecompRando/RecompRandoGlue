@@ -744,6 +744,13 @@ extern "C"
         }
     }
     
+    DLLEXPORT void rando_location_exists(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        int64_t location_id = (int64_t) arg;
+        _return(ctx, AP_LocationExists(state, location_id));
+    }
+    
     DLLEXPORT void rando_location_is_checked(uint8_t* rdram, recomp_context* ctx)
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
