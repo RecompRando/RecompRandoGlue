@@ -155,6 +155,66 @@ extern "C"
 {
     DLLEXPORT u32 recomp_api_version = 1;
     
+    DLLEXPORT void rando_get_saved_apconnect(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) save_dir_ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) address_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        PTR(char) player_name_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        PTR(char) password_ptr = _arg<3, PTR(char)>(rdram, ctx);
+        
+        std::u8string save_dir;
+        getU8Str(rdram, save_dir_ptr, save_dir);
+        std::filesystem::path save_file_path{ save_dir };
+        std::filesystem::path parent_path = save_file_path.parent_path();
+        
+        std::ifstream apconnect(save_file_path.parent_path().string() + "/apconnect.txt");
+        
+        std::string address = "archipelago.gg:38281";
+        std::string player_name = "Player1";
+        std::string password = "";
+        
+        if (apconnect.good())
+        {
+            address = "";
+            player_name = "";
+            
+            glueGetLine(apconnect, address);
+            glueGetLine(apconnect, player_name);
+            glueGetLine(apconnect, password);
+        }
+        
+        setStr(rdram, address_ptr, address.c_str());
+        setStr(rdram, player_name_ptr, player_name.c_str());
+        setStr(rdram, password_ptr, password.c_str());
+    }
+    
+    DLLEXPORT void rando_set_saved_apconnect(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) save_dir_ptr = _arg<0, PTR(char)>(rdram, ctx);
+        PTR(char) address_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        PTR(char) player_name_ptr = _arg<2, PTR(char)>(rdram, ctx);
+        PTR(char) password_ptr = _arg<3, PTR(char)>(rdram, ctx);
+        
+        std::u8string save_dir;
+        getU8Str(rdram, save_dir_ptr, save_dir);
+        std::filesystem::path save_file_path{ save_dir };
+        std::filesystem::path parent_path = save_file_path.parent_path();
+        
+        std::ofstream apconnect(save_file_path.parent_path().string() + "/apconnect.txt", std::ofstream::out);
+        
+        std::string address = "";
+        std::string player_name = "";
+        std::string password = "";
+        
+        getStr(rdram, address_ptr, address);
+        getStr(rdram, player_name_ptr, player_name);
+        getStr(rdram, password_ptr, password);
+        
+        apconnect << address << std::endl
+                  << player_name << std::endl
+                  << password << std::endl;
+    }
+    
     DLLEXPORT void rando_init(uint8_t* rdram, recomp_context* ctx)
     {
         std::string game_name;
