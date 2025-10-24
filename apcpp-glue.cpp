@@ -51,19 +51,6 @@ u32 hasItem(u64 itemId)
 
 int64_t last_location_sent;
 
-void syncLocation(int64_t location_id)
-{
-    if (location_id == 0)
-    {
-        return;
-    }
-    
-    if (location_id == last_location_sent)
-    {
-        while (!AP_GetLocationIsChecked(state, location_id));
-    }
-}
-
 void getStr(uint8_t* rdram, PTR(char) ptr, std::string& outString) {
     char c = MEM_B(0, (gpr) ptr);
     u32 i = 0;
@@ -751,7 +738,6 @@ extern "C"
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t item_id = (int64_t) arg;
-        syncLocation(last_location_sent);
         _return(ctx, hasItem(item_id));
     }
     
@@ -821,7 +807,6 @@ extern "C"
     {
         u32 arg = _arg<0, u32>(rdram, ctx);
         int64_t location_id = (int64_t) arg;
-        syncLocation(location_id);
         _return(ctx, AP_GetLocationIsChecked(state, location_id));
     }
     
