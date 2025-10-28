@@ -234,6 +234,10 @@ extern "C"
         _return<bool>(ctx, state != nullptr && AP_IsInit(state) && !AP_IsConnected(state) && (AP_GetConnectionStatus(state) == AP_ConnectionStatus::ConnectionRefused || AP_GetConnectionStatus(state) == AP_ConnectionStatus::NotFound));
     }
     
+    DLLEXPORT void rando_is_scouted(uint8_t* rdram, recomp_context* ctx) {
+        _return<bool>(ctx, state != nullptr && AP_IsInit(state) && AP_IsConnected(state) && AP_IsScouted(state));
+    }
+    
     DLLEXPORT void rando_get_seed_name(uint8_t* rdram, recomp_context* ctx) {
         PTR(char) seed_name_out = _arg<0, PTR(char)>(rdram, ctx);
         u32 seed_name_out_len = _arg<1, u32>(rdram, ctx);
@@ -700,6 +704,12 @@ extern "C"
     {
         u32 items_i = _arg<0, u32>(rdram, ctx);
         _return(ctx, ((u32) AP_GetReceivedItem(state, items_i)));
+    }
+    
+    DLLEXPORT void rando_get_item_location(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 items_i = _arg<0, u32>(rdram, ctx);
+        _return(ctx, ((s32) AP_GetReceivedItemLocation(state, items_i)));
     }
     
     DLLEXPORT void rando_get_item_type(uint8_t* rdram, recomp_context* ctx)
