@@ -259,6 +259,12 @@ extern "C"
         _return<u32>(ctx, seed_name_size);
     }
     
+    DLLEXPORT void rando_get_own_slot_name(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(char) str_ptr = _arg<0, PTR(char)>(rdram, ctx);
+        setStr(rdram, str_ptr, AP_GetPlayerName(state));
+    }
+    
     DLLEXPORT void rando_get_slotdata_u32(uint8_t* rdram, recomp_context* ctx)
     {
         PTR(char) ptr = _arg<0, PTR(char)>(rdram, ctx);
@@ -660,9 +666,23 @@ extern "C"
     
     DLLEXPORT void rando_get_location_type(uint8_t* rdram, recomp_context* ctx)
     {
-        u32 arg = _arg<0, u32>(rdram, ctx);
-        int64_t location = arg;
-        _return(ctx, (int) AP_GetLocationItemType(state, location));
+        int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
+        _return(ctx, (int) AP_GetLocationItemType(state, location_id));
+    }
+    
+    DLLEXPORT void rando_get_location_has_local_item(uint8_t* rdram, recomp_context* ctx) {
+        int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
+        _return(ctx, (int) AP_GetLocationHasLocalItem(state, location_id));
+    }
+    
+    DLLEXPORT void rando_get_item_at_location(uint8_t* rdram, recomp_context* ctx) {
+        int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
+        _return(ctx, (int) AP_GetItemAtLocation(state, location_id) & 0xFFFFFF);
+    }
+    
+    DLLEXPORT void rando_get_location_item_player_id(uint8_t* rdram, recomp_context* ctx) {
+        int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
+        _return(ctx, (int) AP_GetLocationItemPlayerID(state, location_id));
     }
     
     DLLEXPORT void rando_get_own_team_id(uint8_t* rdram, recomp_context* ctx)
