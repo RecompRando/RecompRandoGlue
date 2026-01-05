@@ -677,7 +677,7 @@ extern "C"
     
     DLLEXPORT void rando_get_item_at_location(uint8_t* rdram, recomp_context* ctx) {
         int64_t location_id = (int64_t) _arg<0, u32>(rdram, ctx);
-        _return(ctx, (int) AP_GetItemAtLocation(state, location_id) & 0xFFFFFF);
+        _return(ctx, (u32) AP_GetItemAtLocation(state, location_id) & 0xFFFFFFFF);
     }
     
     DLLEXPORT void rando_get_location_item_player_id(uint8_t* rdram, recomp_context* ctx) {
