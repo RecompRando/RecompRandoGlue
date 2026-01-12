@@ -368,6 +368,44 @@ extern "C"
         MEM_W(out_ptr, 4) = LOWER(jsonValue);
     }
     
+    DLLEXPORT void rando_iter_slotdata_raw_dict_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
+        PTR(u32) out_ptr = _arg<1, PTR(u32)>(rdram, ctx);
+        
+        u32 upper = MEM_W(in_ptr, 0);
+        u32 lower = MEM_W(in_ptr, 4);
+        
+        uintptr_t jsonValue = CRAFT_64(upper, lower);
+        jsonValue = AP_IterSlotDataRawDict(state, jsonValue);
+        
+        MEM_W(out_ptr, 0) = UPPER(jsonValue);
+        MEM_W(out_ptr, 4) = LOWER(jsonValue);
+    }
+    
+    DLLEXPORT void rando_iter_slotdata_raw_dict_next_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
+        PTR(u32) key_out_ptr = _arg<1, PTR(u32)>(rdram, ctx);
+        PTR(u32) value_out_ptr = _arg<2, PTR(u32)>(rdram, ctx);
+        
+        u32 upper = MEM_W(in_ptr, 0);
+        u32 lower = MEM_W(in_ptr, 4);
+        
+        uintptr_t jsonValue = CRAFT_64(upper, lower);
+        uintptr_t key_out;
+        uintptr_t value_out;
+        bool has_more = AP_IterSlotDataRawDictNext(state, jsonValue, &key_out, &value_out);
+        
+        MEM_W(key_out_ptr, 0) = UPPER(key_out);
+        MEM_W(key_out_ptr, 4) = LOWER(key_out);
+        
+        MEM_W(value_out_ptr, 0) = UPPER(value_out);
+        MEM_W(value_out_ptr, 4) = LOWER(value_out);
+
+        _return(ctx, (bool) has_more);
+    }
+    
     DLLEXPORT void rando_access_slotdata_raw_u32(uint8_t* rdram, recomp_context* ctx)
     {
         u64 jsonValue = _arg<0, u64>(rdram, ctx);
