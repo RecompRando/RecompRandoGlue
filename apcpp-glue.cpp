@@ -368,6 +368,21 @@ extern "C"
         MEM_W(out_ptr, 4) = LOWER(jsonValue);
     }
     
+    DLLEXPORT void rando_access_slotdata_raw_dict_has_member_o32(uint8_t* rdram, recomp_context* ctx)
+    {
+        PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
+        PTR(char) key_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        
+        u32 upper = MEM_W(in_ptr, 0);
+        u32 lower = MEM_W(in_ptr, 4);
+        
+        std::string key;
+        getStr(rdram, key_ptr, key);
+        
+        uintptr_t jsonValue = CRAFT_64(upper, lower);
+        _return(ctx, (bool) AP_AccessSlotDataRawDictHasMember(state, jsonValue, key.c_str()));
+    }
+    
     DLLEXPORT void rando_iter_slotdata_raw_dict_o32(uint8_t* rdram, recomp_context* ctx)
     {
         PTR(u32) in_ptr = _arg<0, u32>(rdram, ctx);
