@@ -61,6 +61,16 @@ void getStr(uint8_t* rdram, PTR(char) ptr, std::string& outString) {
     }
 }
 
+void getStrN(uint8_t* rdram, PTR(char) ptr, std::string& outString, u32 n) {
+    char c = MEM_B(0, (gpr) ptr);
+    u32 i = 0;
+    while (c != 0 && i < n) {
+        outString += c;
+        i += 1;
+        c = MEM_B(i, (gpr) ptr);
+    }
+}
+
 void getU8Str(uint8_t* rdram, PTR(char) ptr, std::u8string& outString) {
     char8_t c = MEM_B(0, (gpr) ptr);
     u32 i = 0;
@@ -75,6 +85,16 @@ void setStr(uint8_t* rdram, PTR(char) ptr, const char* inString) {
     char c = -1;
     u32 i = 0;
     while (c != 0) {
+        c = inString[i];
+        MEM_B(i, (gpr) ptr) = c;
+        i += 1;
+    }
+}
+
+void setStrN(uint8_t* rdram, PTR(char) ptr, const char* inString, u32 n) {
+    char c = -1;
+    u32 i = 0;
+    while (c != 0 && i < n) {
         c = inString[i];
         MEM_B(i, (gpr) ptr) = c;
         i += 1;
@@ -807,6 +827,17 @@ extern "C"
         setStr(rdram, str_ptr, AP_GetItemNameFromID(state, item_id));
     }
     
+    DLLEXPORT void rando_get_item_name_from_id_n(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 arg = _arg<0, u32>(rdram, ctx);
+        PTR(char) str_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        u32 n = _arg<2, u32>(rdram, ctx);
+        
+        int64_t item_id = (int64_t) arg;
+        
+        setStrN(rdram, str_ptr, AP_GetItemNameFromID(state, item_id), n);
+    }
+    
     DLLEXPORT void rando_get_sending_player_name(uint8_t* rdram, recomp_context* ctx)
     {
         u32 items_i = _arg<0, u32>(rdram, ctx);
@@ -815,6 +846,17 @@ extern "C"
         int64_t sending_player = AP_GetSendingPlayer(state, items_i);
         
         setStr(rdram, str_ptr, AP_GetPlayerFromSlot(state, sending_player));
+    }
+    
+    DLLEXPORT void rando_get_sending_player_name_n(uint8_t* rdram, recomp_context* ctx)
+    {
+        u32 items_i = _arg<0, u32>(rdram, ctx);
+        PTR(char) str_ptr = _arg<1, PTR(char)>(rdram, ctx);
+        u32 n = _arg<2, u32>(rdram, ctx);
+        
+        int64_t sending_player = AP_GetSendingPlayer(state, items_i);
+        
+        setStrN(rdram, str_ptr, AP_GetPlayerFromSlot(state, sending_player), n);
     }
     
     DLLEXPORT void rando_has_item(uint8_t* rdram, recomp_context* ctx)
